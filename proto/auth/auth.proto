@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "github.com/identity-platform/proto/auth";
+
+service AuthService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+  rpc ResendVerification(ResendVerificationRequest) returns (ResendVerificationResponse);
+  rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse);
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+  rpc EnableMFA(EnableMFARequest) returns (EnableMFAResponse);
+  rpc DisableMFA(DisableMFARequest) returns (DisableMFAResponse);
+  rpc ValidateMFA(ValidateMFARequest) returns (ValidateMFAResponse);
+}
+
+message RegisterRequest {
+  string email = 1;
+  string username = 2;
+  string password = 3;
+}
+
+message RegisterResponse {
+  string user_id = 1;
+  string message = 2;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+  string device_name = 3;
+  string device_fingerprint = 4;
+  string ip_address = 5;
+  string user_agent = 6;
+}
+
+message LoginResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  string session_id = 3;
+  bool mfa_required = 4;
+  string mfa_session_token = 5;
+}
+
+message LogoutRequest {
+  string session_id = 1;
+}
+
+message LogoutResponse {
+  string message = 1;
+}
+
+message VerifyEmailRequest {
+  string token = 1;
+}
+
+message VerifyEmailResponse {
+  string message = 1;
+}
+
+message ResendVerificationRequest {
+  string email = 1;
+}
+
+message ResendVerificationResponse {
+  string message = 1;
+}
+
+message ForgotPasswordRequest {
+  string email = 1;
+}
+
+message ForgotPasswordResponse {
+  string message = 1;
+}
+
+message ResetPasswordRequest {
+  string token = 1;
+  string new_password = 2;
+}
+
+message ResetPasswordResponse {
+  string message = 1;
+}
+
+message EnableMFARequest {
+  string user_id = 1;
+}
+
+message EnableMFAResponse {
+  string secret = 1;
+  string qr_code_url = 2;
+}
+
+message DisableMFARequest {
+  string user_id = 1;
+  string totp_code = 2;
+}
+
+message DisableMFAResponse {
+  string message = 1;
+}
+
+message ValidateMFARequest {
+  string mfa_session_token = 1;
+  string totp_code = 2;
+}
+
+message ValidateMFAResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  string session_id = 3;
+}

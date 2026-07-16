@@ -1,0 +1,177 @@
+syntax = "proto3";
+
+package oauth2;
+
+option go_package = "github.com/identity-platform/proto/oauth2";
+
+service OAuth2Service {
+  rpc CreateApp(CreateAppRequest) returns (CreateAppResponse);
+  rpc GetApp(GetAppRequest) returns (GetAppResponse);
+  rpc ListApps(ListAppsRequest) returns (ListAppsResponse);
+  rpc UpdateApp(UpdateAppRequest) returns (UpdateAppResponse);
+  rpc GenerateClientSecret(GenerateClientSecretRequest) returns (GenerateClientSecretResponse);
+
+  rpc Authorize(AuthorizeRequest) returns (AuthorizeResponse);
+  rpc Token(TokenRequest) returns (TokenResponse);
+  rpc UserInfo(UserInfoRequest) returns (UserInfoResponse);
+  rpc Introspect(IntrospectRequest) returns (IntrospectResponse);
+  rpc Revoke(RevokeRequest) returns (RevokeResponse);
+
+  rpc ListUserAuthorizations(ListUserAuthorizationsRequest) returns (ListUserAuthorizationsResponse);
+  rpc RevokeUserAuthorization(RevokeUserAuthorizationRequest) returns (RevokeUserAuthorizationResponse);
+}
+
+message CreateAppRequest {
+  string owner_id = 1;
+  string name = 2;
+  string description = 3;
+  string homepage_url = 4;
+  repeated string redirect_uris = 5;
+  repeated string allowed_scopes = 6;
+}
+
+message CreateAppResponse {
+  string client_id = 1;
+  string client_secret = 2;
+}
+
+message GetAppRequest {
+  string client_id = 1;
+}
+
+message GetAppResponse {
+  string client_id = 1;
+  string name = 2;
+  string description = 3;
+  string homepage_url = 4;
+  repeated string redirect_uris = 5;
+  repeated string allowed_scopes = 6;
+  string status = 7;
+  string created_at = 8;
+}
+
+message ListAppsRequest {
+  string owner_id = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message ListAppsResponse {
+  repeated GetAppResponse apps = 1;
+  int32 total = 2;
+}
+
+message UpdateAppRequest {
+  string client_id = 1;
+  string name = 2;
+  string description = 3;
+  string homepage_url = 4;
+  repeated string redirect_uris = 5;
+  repeated string allowed_scopes = 6;
+}
+
+message UpdateAppResponse {
+  string message = 1;
+}
+
+message GenerateClientSecretRequest {
+  string client_id = 1;
+}
+
+message GenerateClientSecretResponse {
+  string client_secret = 1;
+}
+
+message AuthorizeRequest {
+  string client_id = 1;
+  string redirect_uri = 2;
+  string response_type = 3;
+  string scope = 4;
+  string state = 5;
+  string code_challenge = 6;
+  string code_challenge_method = 7;
+  string user_id = 8;
+}
+
+message AuthorizeResponse {
+  string code = 1;
+  string redirect_uri = 2;
+  string state = 3;
+}
+
+message TokenRequest {
+  string grant_type = 1;
+  string code = 2;
+  string redirect_uri = 3;
+  string client_id = 4;
+  string client_secret = 5;
+  string code_verifier = 6;
+  string refresh_token = 7;
+}
+
+message TokenResponse {
+  string access_token = 1;
+  string token_type = 2;
+  int32 expires_in = 3;
+  string refresh_token = 4;
+  string id_token = 5;
+  string scope = 6;
+}
+
+message UserInfoRequest {
+  string access_token = 1;
+}
+
+message UserInfoResponse {
+  string sub = 1;
+  string email = 2;
+  bool email_verified = 3;
+  string name = 4;
+  string picture = 5;
+}
+
+message IntrospectRequest {
+  string token = 1;
+}
+
+message IntrospectResponse {
+  bool active = 1;
+  string scope = 2;
+  string client_id = 3;
+  string user_id = 4;
+  string token_type = 5;
+  int32 exp = 6;
+}
+
+message RevokeRequest {
+  string token = 1;
+  string token_type_hint = 2;
+}
+
+message RevokeResponse {
+  string message = 1;
+}
+
+message ListUserAuthorizationsRequest {
+  string user_id = 1;
+}
+
+message ListUserAuthorizationsResponse {
+  repeated UserAuthorization authorizations = 1;
+}
+
+message UserAuthorization {
+  string client_id = 1;
+  string app_name = 2;
+  repeated string scopes = 3;
+  string created_at = 4;
+}
+
+message RevokeUserAuthorizationRequest {
+  string user_id = 1;
+  string client_id = 2;
+}
+
+message RevokeUserAuthorizationResponse {
+  string message = 1;
+}

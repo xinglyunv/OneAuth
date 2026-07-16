@@ -1,0 +1,11 @@
+config/keys/
+server
+*.log
+.env
+.env.local
+.DS_Store
+node_modules/
+.next/
+*.tsbuildinfo
+dist/
+build/

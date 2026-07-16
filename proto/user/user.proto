@@ -1,0 +1,116 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "github.com/identity-platform/proto/user";
+
+service UserService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+  rpc RevokeOtherSessions(RevokeOtherSessionsRequest) returns (RevokeOtherSessionsResponse);
+
+  rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
+}
+
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message GetProfileResponse {
+  string user_id = 1;
+  string username = 2;
+  string email = 3;
+  string phone = 4;
+  string avatar = 5;
+  bool email_verified = 6;
+  bool mfa_enabled = 7;
+  string status = 8;
+  string created_at = 9;
+}
+
+message UpdateProfileRequest {
+  string user_id = 1;
+  string username = 2;
+  string phone = 3;
+  string avatar = 4;
+}
+
+message UpdateProfileResponse {
+  string message = 1;
+}
+
+message ChangePasswordRequest {
+  string user_id = 1;
+  string old_password = 2;
+  string new_password = 3;
+}
+
+message ChangePasswordResponse {
+  string message = 1;
+}
+
+message ListSessionsRequest {
+  string user_id = 1;
+}
+
+message ListSessionsResponse {
+  repeated Session sessions = 1;
+}
+
+message Session {
+  string session_id = 1;
+  string device_name = 2;
+  string os = 3;
+  string browser = 4;
+  string ip_address = 5;
+  string user_agent = 6;
+  bool is_current = 7;
+  string created_at = 8;
+  string expires_at = 9;
+}
+
+message RevokeSessionRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+message RevokeSessionResponse {
+  string message = 1;
+}
+
+message RevokeOtherSessionsRequest {
+  string user_id = 1;
+  string current_session_id = 2;
+}
+
+message RevokeOtherSessionsResponse {
+  string message = 1;
+}
+
+message ListAuditLogsRequest {
+  string user_id = 1;
+  string action = 2;
+  string start_time = 3;
+  string end_time = 4;
+  int32 page = 5;
+  int32 page_size = 6;
+}
+
+message ListAuditLogsResponse {
+  repeated AuditLog logs = 1;
+  int32 total = 2;
+}
+
+message AuditLog {
+  string id = 1;
+  string action = 2;
+  string detail = 3;
+  string ip_address = 4;
+  string user_agent = 5;
+  string result = 6;
+  string created_at = 7;
+}
