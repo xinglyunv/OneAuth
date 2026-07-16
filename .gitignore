@@ -1,5 +1,5 @@
 config/keys/
-server
+/server
 *.log
 .env
 .env.local
