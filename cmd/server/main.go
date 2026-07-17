@@ -12,6 +12,7 @@ import (
 
 	"github.com/identity-platform/config"
 	"github.com/identity-platform/internal/ent"
+	"github.com/identity-platform/internal/ent/role"
 	"github.com/identity-platform/internal/gateway"
 	jwtpkg "github.com/identity-platform/internal/pkg/jwt"
 	_ "github.com/lib/pq"
@@ -46,6 +47,10 @@ func main() {
 		logger.Fatal("failed to run schema migration", zap.Error(err))
 	}
 
+	if err := seedRoles(context.Background(), db, logger); err != nil {
+		logger.Fatal("failed to seed roles", zap.Error(err))
+	}
+
 	rdb := initRedis(cfg, logger)
 	defer rdb.Close()
 
@@ -61,9 +66,9 @@ func main() {
 		}
 	}()
 
-	handler := gateway.NewOAuth2Handler(authSvc, oauth2Svc, jwtManager)
+	handler := gateway.NewOAuth2Handler(authSvc, oauth2Svc, jwtManager, db, cfg.Admin)
 
-	router := gateway.NewRouter(handler, jwtManager, logger)
+	router := gateway.NewRouter(handler, jwtManager, logger, db)
 
 	httpSrv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Server.HTTPPort),
@@ -149,6 +154,36 @@ func initRedis(cfg *config.Config, logger *zap.Logger) *redis.Client {
 	}
 
 	return rdb
+}
+
+func seedRoles(ctx context.Context, db *ent.Client, logger *zap.Logger) error {
+	baseRoles := []struct {
+		Name        string
+		Description string
+	}{
+		{"USER", "Regular user with basic platform access"},
+		{"DEVELOPER", "Developer with OAuth application management access"},
+		{"ADMIN", "Administrator with full system access"},
+		{"SUPER_ADMIN", "Super administrator with unrestricted access"},
+	}
+
+	for _, r := range baseRoles {
+		exists, err := db.Role.Query().Where(role.NameEQ(r.Name)).Exist(ctx)
+		if err != nil {
+			return fmt.Errorf("check role %s: %w", r.Name, err)
+		}
+		if !exists {
+			if _, err := db.Role.Create().
+				SetName(r.Name).
+				SetDescription(r.Description).
+				SetScope("system").
+				Save(ctx); err != nil {
+				return fmt.Errorf("create role %s: %w", r.Name, err)
+			}
+			logger.Info("seeded role", zap.String("role", r.Name))
+		}
+	}
+	return nil
 }
 
 func initJWT(cfg *config.Config, logger *zap.Logger) *jwtpkg.TokenManager {

@@ -91,6 +91,34 @@ func (_c *SessionCreate) SetNillableStatus(v *session.Status) *SessionCreate {
 	return _c
 }
 
+// SetRole sets the "role" field.
+func (_c *SessionCreate) SetRole(v string) *SessionCreate {
+	_c.mutation.SetRole(v)
+	return _c
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (_c *SessionCreate) SetNillableRole(v *string) *SessionCreate {
+	if v != nil {
+		_c.SetRole(*v)
+	}
+	return _c
+}
+
+// SetLoginType sets the "login_type" field.
+func (_c *SessionCreate) SetLoginType(v session.LoginType) *SessionCreate {
+	_c.mutation.SetLoginType(v)
+	return _c
+}
+
+// SetNillableLoginType sets the "login_type" field if the given value is not nil.
+func (_c *SessionCreate) SetNillableLoginType(v *session.LoginType) *SessionCreate {
+	if v != nil {
+		_c.SetLoginType(*v)
+	}
+	return _c
+}
+
 // SetExpiresAt sets the "expires_at" field.
 func (_c *SessionCreate) SetExpiresAt(v time.Time) *SessionCreate {
 	_c.mutation.SetExpiresAt(v)
@@ -202,6 +230,10 @@ func (_c *SessionCreate) defaults() {
 		v := session.DefaultStatus
 		_c.mutation.SetStatus(v)
 	}
+	if _, ok := _c.mutation.LoginType(); !ok {
+		v := session.DefaultLoginType
+		_c.mutation.SetLoginType(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := session.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -235,6 +267,14 @@ func (_c *SessionCreate) check() error {
 	if v, ok := _c.mutation.Status(); ok {
 		if err := session.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Session.status": %w`, err)}
+		}
+	}
+	if _, ok := _c.mutation.LoginType(); !ok {
+		return &ValidationError{Name: "login_type", err: errors.New(`ent: missing required field "Session.login_type"`)}
+	}
+	if v, ok := _c.mutation.LoginType(); ok {
+		if err := session.LoginTypeValidator(v); err != nil {
+			return &ValidationError{Name: "login_type", err: fmt.Errorf(`ent: validator failed for field "Session.login_type": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.ExpiresAt(); !ok {
@@ -299,6 +339,14 @@ func (_c *SessionCreate) createSpec() (*Session, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(session.FieldStatus, field.TypeEnum, value)
 		_node.Status = value
+	}
+	if value, ok := _c.mutation.Role(); ok {
+		_spec.SetField(session.FieldRole, field.TypeString, value)
+		_node.Role = value
+	}
+	if value, ok := _c.mutation.LoginType(); ok {
+		_spec.SetField(session.FieldLoginType, field.TypeEnum, value)
+		_node.LoginType = value
 	}
 	if value, ok := _c.mutation.ExpiresAt(); ok {
 		_spec.SetField(session.FieldExpiresAt, field.TypeTime, value)

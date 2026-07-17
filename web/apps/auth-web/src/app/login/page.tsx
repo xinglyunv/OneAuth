@@ -1,80 +1,224 @@
 "use client"
 
-import { useState } from "react"
+import "@/app/globals.css"
+import { useState, FormEvent } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { api } from "@identity/shared"
 
+enum Step {
+  Login = "login",
+  MFA = "mfa",
+}
+
+function detectDeviceInfo(): { name: string; fingerprint: string } {
+  if (typeof navigator === "undefined") return { name: "Web", fingerprint: "" }
+  const ua = navigator.userAgent
+  const lower = ua.toLowerCase()
+  let name = "Web"
+  if (/iphone/i.test(ua)) name = "iPhone"
+  else if (/ipad/i.test(ua)) name = "iPad"
+  else if (/android.*mobile/i.test(ua)) name = "Android Phone"
+  else if (/android/i.test(ua)) name = "Android Tablet"
+  else if (/macintosh|mac os/i.test(ua)) name = "Mac"
+  else if (/windows/i.test(ua)) name = "PC"
+  else if (/linux/i.test(ua)) name = "Linux"
+  const screenSize = typeof screen !== "undefined" ? `${screen.width}x${screen.height}` : ""
+  const fp = [ua, screenSize, new Date().getTimezoneOffset()].join("|")
+  let hash = 0
+  for (let i = 0; i < fp.length; i++) { const c = fp.charCodeAt(i); hash = ((hash << 5) - hash) + c; hash |= 0 }
+  return { name, fingerprint: Math.abs(hash).toString(36) }
+}
+
 export default function LoginPage() {
+  const router = useRouter()
+
+  const [step, setStep] = useState<Step>(Step.Login)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [mfaToken, setMfaToken] = useState("")
-  const [mfaCode, setMfaCode] = useState("")
-  const [step, setStep] = useState<"login" | "mfa">("login")
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  // MFA state
+  const [mfaToken, setMfaToken] = useState("")
+  const [totpCode, setTotpCode] = useState("")
+
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault()
     setError("")
+
+    if (!email.trim() || !password.trim()) {
+      setError("请输入邮箱和密码")
+      return
+    }
+
+    setLoading(true)
     try {
-      const f = await navigator.userAgent
-      const res = await api.login(email, password, "Web Browser", btoa(f))
-      if (res.mfa_required) {
-        setMfaToken(res.mfa_session_token || "")
-        setStep("mfa")
-      } else {
-        localStorage.setItem("access_token", res.access_token)
-        localStorage.setItem("refresh_token", res.refresh_token)
-        window.location.href = "/"
+      const di = detectDeviceInfo()
+      const res = await api.login(
+        email.trim(),
+        password,
+        di.name,
+        di.fingerprint,
+      )
+
+      if (res.mfa_required && res.mfa_session_token) {
+        setMfaToken(res.mfa_session_token)
+        setStep(Step.MFA)
+        return
       }
-    } catch (err: any) {
-      setError(err.message)
+
+      localStorage.setItem("access_token", res.access_token)
+      localStorage.setItem("refresh_token", res.refresh_token)
+      const me = await api.getMe()
+      router.push(me.role === "DEVELOPER" ? "/developer" : "/user")
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "登录失败，请稍后重试"
+      setError(message)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleMFA = async (e: React.FormEvent) => {
+  const handleMFA = async (e: FormEvent) => {
     e.preventDefault()
     setError("")
+
+    if (totpCode.length < 6) {
+      setError("请输入完整的 6 位验证码")
+      return
+    }
+
+    setLoading(true)
     try {
-      const res = await api.mfaValidate(mfaToken, mfaCode)
+      const res = await api.mfaValidate(mfaToken, totpCode)
       localStorage.setItem("access_token", res.access_token)
       localStorage.setItem("refresh_token", res.refresh_token)
-      window.location.href = "/"
-    } catch (err: any) {
-      setError(err.message)
+      const me = await api.getMe()
+      router.push(me.role === "DEVELOPER" ? "/developer" : "/user")
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "验证失败，请重试"
+      setError(message)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  if (step === Step.MFA) {
+    return (
+      <div className="cc-page" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="cc-container">
+          <div className="cc-card" style={{ padding: "2rem" }}>
+            <h2 style={{ fontSize: "1.375rem", fontWeight: 700, margin: "0 0 0.25rem", color: "var(--cc-text)" }}>
+              二次验证
+            </h2>
+            <p style={{ fontSize: "0.875rem", color: "var(--cc-text-secondary)", margin: "0 0 1.5rem" }}>
+              需要二次验证
+            </p>
+
+            {error && <div className="cc-alert cc-alert-error" style={{ marginBottom: "1rem" }}>{error}</div>}
+
+            <form onSubmit={handleMFA}>
+              <label className="cc-label" htmlFor="totp">TOTP 验证码</label>
+              <input
+                id="totp"
+                className="cc-input"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={totpCode}
+                onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+                style={{ textAlign: "center", fontSize: "1.75rem", letterSpacing: "0.5em", fontFamily: "monospace" }}
+                placeholder="000000"
+                autoFocus
+              />
+
+              <button
+                type="submit"
+                className="cc-btn cc-btn-primary cc-btn-block"
+                disabled={loading || totpCode.length < 6}
+                style={{ marginTop: "1.25rem" }}
+              >
+                {loading && <span className="cc-spinner" />}
+                {loading ? "验证中..." : "验证"}
+              </button>
+            </form>
+
+            <div style={{ textAlign: "center", marginTop: "1.5rem", fontSize: "0.875rem", color: "var(--cc-text-secondary)" }}>
+              <Link href="/login" className="cc-btn cc-btn-ghost cc-btn-sm" onClick={() => setStep(Step.Login)}>
+                返回登录
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: "100px auto", padding: 32, background: "#fff", borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}>
-      <h1 style={{ fontSize: 24, marginBottom: 24, textAlign: "center" }}>登录</h1>
-      {step === "login" ? (
-        <form onSubmit={handleLogin}>
-          <input value={email} onChange={e => setEmail(e.target.value)} placeholder="邮箱" required
-            style={{ width: "100%", padding: "10px 12px", marginBottom: 12, border: "1px solid #ddd", borderRadius: 4, fontSize: 14 }} />
-          <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="密码" required
-            style={{ width: "100%", padding: "10px 12px", marginBottom: 12, border: "1px solid #ddd", borderRadius: 4, fontSize: 14 }} />
-          <button type="submit"
-            style={{ width: "100%", padding: 12, background: "#1677ff", color: "#fff", border: "none", borderRadius: 4, fontSize: 16, cursor: "pointer" }}>
+    <div className="cc-page" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div className="cc-container">
+        <div className="cc-card" style={{ padding: "2rem" }}>
+          <h2 style={{ fontSize: "1.375rem", fontWeight: 700, margin: "0 0 0.25rem", color: "var(--cc-text)" }}>
             登录
-          </button>
-          {error && <p style={{ color: "red", marginTop: 12, fontSize: 14 }}>{error}</p>}
-          <div style={{ marginTop: 16, textAlign: "center", fontSize: 14 }}>
-            <a href="/register" style={{ color: "#1677ff", textDecoration: "none" }}>注册账号</a>
-            <span style={{ margin: "0 8px" }}>|</span>
-            <a href="/forgot-password" style={{ color: "#1677ff", textDecoration: "none" }}>忘记密码</a>
+          </h2>
+          <p style={{ fontSize: "0.875rem", color: "var(--cc-text-secondary)", margin: "0 0 1.5rem" }}>
+            欢迎回来
+          </p>
+
+          {error && <div className="cc-alert cc-alert-error" style={{ marginBottom: "1rem" }}>{error}</div>}
+
+          <form onSubmit={handleLogin}>
+            <label className="cc-label" htmlFor="email">邮箱</label>
+            <input
+              id="email"
+              className="cc-input"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              autoFocus
+            />
+            <div style={{ height: "1rem" }} />
+
+            <label className="cc-label" htmlFor="password">密码</label>
+            <input
+              id="password"
+              className="cc-input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="输入密码"
+            />
+
+            <button
+              type="submit"
+              className="cc-btn cc-btn-primary cc-btn-block"
+              disabled={loading}
+              style={{ marginTop: "1.5rem" }}
+            >
+              {loading && <span className="cc-spinner" />}
+              {loading ? "登录中..." : "登录"}
+            </button>
+          </form>
+
+          <div style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: "1rem",
+            marginTop: "1.5rem",
+            fontSize: "0.875rem",
+          }}>
+            <Link href="/register" style={{ color: "var(--cc-text-secondary)", textDecoration: "none" }}>
+              注册账号
+            </Link>
+            <span style={{ color: "var(--cc-border)" }}>|</span>
+            <Link href="/forgot-password" style={{ color: "var(--cc-text-secondary)", textDecoration: "none" }}>
+              忘记密码
+            </Link>
           </div>
-        </form>
-      ) : (
-        <form onSubmit={handleMFA}>
-          <p style={{ fontSize: 14, marginBottom: 12, color: "#666" }}>请输入您绑定的身份验证器中的 6 位验证码</p>
-          <input value={mfaCode} onChange={e => setMfaCode(e.target.value)} placeholder="TOTP 验证码" maxLength={6} required
-            style={{ width: "100%", padding: "10px 12px", marginBottom: 12, border: "1px solid #ddd", borderRadius: 4, fontSize: 14, textAlign: "center" }} />
-          <button type="submit"
-            style={{ width: "100%", padding: 12, background: "#1677ff", color: "#fff", border: "none", borderRadius: 4, fontSize: 16, cursor: "pointer" }}>
-            验证
-          </button>
-          {error && <p style={{ color: "red", marginTop: 12, fontSize: 14 }}>{error}</p>}
-        </form>
-      )}
+        </div>
+      </div>
     </div>
   )
 }

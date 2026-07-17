@@ -98,6 +98,41 @@ var (
 			},
 		},
 	}
+	// BackupCodesColumns holds the columns for the "backup_codes" table.
+	BackupCodesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "code_hash", Type: field.TypeString},
+		{Name: "used", Type: field.TypeBool, Default: false},
+		{Name: "used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// BackupCodesTable holds the schema information for the "backup_codes" table.
+	BackupCodesTable = &schema.Table{
+		Name:       "backup_codes",
+		Columns:    BackupCodesColumns,
+		PrimaryKey: []*schema.Column{BackupCodesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "backup_codes_users_backup_codes",
+				Columns:    []*schema.Column{BackupCodesColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "backupcode_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{BackupCodesColumns[5]},
+			},
+			{
+				Name:    "backupcode_user_id_code_hash",
+				Unique:  true,
+				Columns: []*schema.Column{BackupCodesColumns[5], BackupCodesColumns[1]},
+			},
+		},
+	}
 	// DevicesColumns holds the columns for the "devices" table.
 	DevicesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -160,6 +195,34 @@ var (
 				Name:    "emailverificationtoken_user_id",
 				Unique:  false,
 				Columns: []*schema.Column{EmailVerificationTokensColumns[1]},
+			},
+		},
+	}
+	// IPRulesColumns holds the columns for the "ip_rules" table.
+	IPRulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "ip_or_cidr", Type: field.TypeString},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"blacklist", "whitelist"}, Default: "blacklist"},
+		{Name: "reason", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// IPRulesTable holds the schema information for the "ip_rules" table.
+	IPRulesTable = &schema.Table{
+		Name:       "ip_rules",
+		Columns:    IPRulesColumns,
+		PrimaryKey: []*schema.Column{IPRulesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "iprule_ip_or_cidr",
+				Unique:  false,
+				Columns: []*schema.Column{IPRulesColumns[1]},
+			},
+			{
+				Name:    "iprule_type_is_active",
+				Unique:  false,
+				Columns: []*schema.Column{IPRulesColumns[2], IPRulesColumns[4]},
 			},
 		},
 	}
@@ -333,6 +396,73 @@ var (
 			},
 		},
 	}
+	// OrganizationsColumns holds the columns for the "organizations" table.
+	OrganizationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString},
+		{Name: "slug", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "domain", Type: field.TypeString, Nullable: true},
+		{Name: "logo_url", Type: field.TypeString, Nullable: true},
+		{Name: "owner_id", Type: field.TypeUUID},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled"}, Default: "active"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
+	}
+	// OrganizationsTable holds the schema information for the "organizations" table.
+	OrganizationsTable = &schema.Table{
+		Name:       "organizations",
+		Columns:    OrganizationsColumns,
+		PrimaryKey: []*schema.Column{OrganizationsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "organization_slug",
+				Unique:  true,
+				Columns: []*schema.Column{OrganizationsColumns[2]},
+			},
+			{
+				Name:    "organization_owner_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationsColumns[6]},
+			},
+		},
+	}
+	// OrganizationMembersColumns holds the columns for the "organization_members" table.
+	OrganizationMembersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"owner", "admin", "member"}, Default: "member"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "organization_id", Type: field.TypeUUID},
+	}
+	// OrganizationMembersTable holds the schema information for the "organization_members" table.
+	OrganizationMembersTable = &schema.Table{
+		Name:       "organization_members",
+		Columns:    OrganizationMembersColumns,
+		PrimaryKey: []*schema.Column{OrganizationMembersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "organization_members_organizations_members",
+				Columns:    []*schema.Column{OrganizationMembersColumns[5]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "organizationmember_organization_id_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{OrganizationMembersColumns[5], OrganizationMembersColumns[1]},
+			},
+			{
+				Name:    "organizationmember_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{OrganizationMembersColumns[1]},
+			},
+		},
+	}
 	// PasswordCredentialsColumns holds the columns for the "password_credentials" table.
 	PasswordCredentialsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -381,6 +511,71 @@ var (
 				Name:    "passwordresettoken_user_id",
 				Unique:  false,
 				Columns: []*schema.Column{PasswordResetTokensColumns[1]},
+			},
+		},
+	}
+	// PermissionsColumns holds the columns for the "permissions" table.
+	PermissionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "resource", Type: field.TypeString},
+		{Name: "action", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// PermissionsTable holds the schema information for the "permissions" table.
+	PermissionsTable = &schema.Table{
+		Name:       "permissions",
+		Columns:    PermissionsColumns,
+		PrimaryKey: []*schema.Column{PermissionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "permission_name",
+				Unique:  true,
+				Columns: []*schema.Column{PermissionsColumns[1]},
+			},
+			{
+				Name:    "permission_resource_action",
+				Unique:  false,
+				Columns: []*schema.Column{PermissionsColumns[3], PermissionsColumns[4]},
+			},
+		},
+	}
+	// PersonalTokensColumns holds the columns for the "personal_tokens" table.
+	PersonalTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString},
+		{Name: "token_hash", Type: field.TypeString, Unique: true},
+		{Name: "scopes", Type: field.TypeString, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// PersonalTokensTable holds the schema information for the "personal_tokens" table.
+	PersonalTokensTable = &schema.Table{
+		Name:       "personal_tokens",
+		Columns:    PersonalTokensColumns,
+		PrimaryKey: []*schema.Column{PersonalTokensColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "personal_tokens_users_personal_tokens",
+				Columns:    []*schema.Column{PersonalTokensColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "personaltoken_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{PersonalTokensColumns[8]},
+			},
+			{
+				Name:    "personaltoken_token_hash",
+				Unique:  true,
+				Columns: []*schema.Column{PersonalTokensColumns[2]},
 			},
 		},
 	}
@@ -437,6 +632,29 @@ var (
 			},
 		},
 	}
+	// RolesColumns holds the columns for the "roles" table.
+	RolesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "scope", Type: field.TypeEnum, Enums: []string{"system", "organization"}, Default: "system"},
+		{Name: "organization_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// RolesTable holds the schema information for the "roles" table.
+	RolesTable = &schema.Table{
+		Name:       "roles",
+		Columns:    RolesColumns,
+		PrimaryKey: []*schema.Column{RolesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "role_name",
+				Unique:  true,
+				Columns: []*schema.Column{RolesColumns[1]},
+			},
+		},
+	}
 	// SessionsColumns holds the columns for the "sessions" table.
 	SessionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -444,6 +662,8 @@ var (
 		{Name: "ip_address", Type: field.TypeString, Nullable: true},
 		{Name: "user_agent", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "revoked", "expired"}, Default: "active"},
+		{Name: "role", Type: field.TypeString, Nullable: true},
+		{Name: "login_type", Type: field.TypeEnum, Enums: []string{"normal", "oauth", "developer", "admin"}, Default: "normal"},
 		{Name: "expires_at", Type: field.TypeTime},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "last_active_at", Type: field.TypeTime},
@@ -459,13 +679,13 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "sessions_devices_sessions",
-				Columns:    []*schema.Column{SessionsColumns[9]},
+				Columns:    []*schema.Column{SessionsColumns[11]},
 				RefColumns: []*schema.Column{DevicesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "sessions_users_sessions",
-				Columns:    []*schema.Column{SessionsColumns[10]},
+				Columns:    []*schema.Column{SessionsColumns[12]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -474,7 +694,7 @@ var (
 			{
 				Name:    "session_user_id",
 				Unique:  false,
-				Columns: []*schema.Column{SessionsColumns[10]},
+				Columns: []*schema.Column{SessionsColumns[12]},
 			},
 			{
 				Name:    "session_token_hash",
@@ -517,6 +737,28 @@ var (
 			},
 		},
 	}
+	// SystemConfigsColumns holds the columns for the "system_configs" table.
+	SystemConfigsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "key", Type: field.TypeString, Unique: true},
+		{Name: "value", Type: field.TypeString, Size: 2147483647},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// SystemConfigsTable holds the schema information for the "system_configs" table.
+	SystemConfigsTable = &schema.Table{
+		Name:       "system_configs",
+		Columns:    SystemConfigsColumns,
+		PrimaryKey: []*schema.Column{SystemConfigsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "systemconfig_key",
+				Unique:  true,
+				Columns: []*schema.Column{SystemConfigsColumns[1]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -554,6 +796,84 @@ var (
 			},
 		},
 	}
+	// UserEmailsColumns holds the columns for the "user_emails" table.
+	UserEmailsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "is_primary", Type: field.TypeBool, Default: false},
+		{Name: "verified", Type: field.TypeBool, Default: false},
+		{Name: "verified_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// UserEmailsTable holds the schema information for the "user_emails" table.
+	UserEmailsTable = &schema.Table{
+		Name:       "user_emails",
+		Columns:    UserEmailsColumns,
+		PrimaryKey: []*schema.Column{UserEmailsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_emails_users_emails",
+				Columns:    []*schema.Column{UserEmailsColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "useremail_email",
+				Unique:  true,
+				Columns: []*schema.Column{UserEmailsColumns[1]},
+			},
+			{
+				Name:    "useremail_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserEmailsColumns[7]},
+			},
+			{
+				Name:    "useremail_user_id_is_primary",
+				Unique:  false,
+				Columns: []*schema.Column{UserEmailsColumns[7], UserEmailsColumns[2]},
+			},
+		},
+	}
+	// UserPhonesColumns holds the columns for the "user_phones" table.
+	UserPhonesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "phone", Type: field.TypeString, Unique: true},
+		{Name: "verified", Type: field.TypeBool, Default: false},
+		{Name: "verified_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// UserPhonesTable holds the schema information for the "user_phones" table.
+	UserPhonesTable = &schema.Table{
+		Name:       "user_phones",
+		Columns:    UserPhonesColumns,
+		PrimaryKey: []*schema.Column{UserPhonesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_phones_users_phones",
+				Columns:    []*schema.Column{UserPhonesColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userphone_phone",
+				Unique:  true,
+				Columns: []*schema.Column{UserPhonesColumns[1]},
+			},
+			{
+				Name:    "userphone_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{UserPhonesColumns[6]},
+			},
+		},
+	}
 	// UserProfilesColumns holds the columns for the "user_profiles" table.
 	UserProfilesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -580,36 +900,180 @@ var (
 			},
 		},
 	}
+	// UserRolesColumns holds the columns for the "user_roles" table.
+	UserRolesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "role_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// UserRolesTable holds the schema information for the "user_roles" table.
+	UserRolesTable = &schema.Table{
+		Name:       "user_roles",
+		Columns:    UserRolesColumns,
+		PrimaryKey: []*schema.Column{UserRolesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_roles_roles_users",
+				Columns:    []*schema.Column{UserRolesColumns[2]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "user_roles_users_roles",
+				Columns:    []*schema.Column{UserRolesColumns[3]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "userrole_user_id_role_id",
+				Unique:  true,
+				Columns: []*schema.Column{UserRolesColumns[3], UserRolesColumns[2]},
+			},
+		},
+	}
+	// WebhooksColumns holds the columns for the "webhooks" table.
+	WebhooksColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "url", Type: field.TypeString},
+		{Name: "secret", Type: field.TypeString, Nullable: true},
+		{Name: "event_types", Type: field.TypeString, Size: 2147483647},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "disabled"}, Default: "active"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// WebhooksTable holds the schema information for the "webhooks" table.
+	WebhooksTable = &schema.Table{
+		Name:       "webhooks",
+		Columns:    WebhooksColumns,
+		PrimaryKey: []*schema.Column{WebhooksColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "webhook_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{WebhooksColumns[1]},
+			},
+		},
+	}
+	// WebhookEventsColumns holds the columns for the "webhook_events" table.
+	WebhookEventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "event_type", Type: field.TypeString},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"pending", "delivered", "failed"}, Default: "pending"},
+		{Name: "attempts", Type: field.TypeInt, Default: 0},
+		{Name: "last_attempt_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "webhook_id", Type: field.TypeUUID},
+	}
+	// WebhookEventsTable holds the schema information for the "webhook_events" table.
+	WebhookEventsTable = &schema.Table{
+		Name:       "webhook_events",
+		Columns:    WebhookEventsColumns,
+		PrimaryKey: []*schema.Column{WebhookEventsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "webhook_events_webhooks_events",
+				Columns:    []*schema.Column{WebhookEventsColumns[7]},
+				RefColumns: []*schema.Column{WebhooksColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "webhookevent_webhook_id",
+				Unique:  false,
+				Columns: []*schema.Column{WebhookEventsColumns[7]},
+			},
+			{
+				Name:    "webhookevent_status",
+				Unique:  false,
+				Columns: []*schema.Column{WebhookEventsColumns[3]},
+			},
+		},
+	}
+	// RolePermissionsColumns holds the columns for the "role_permissions" table.
+	RolePermissionsColumns = []*schema.Column{
+		{Name: "role_id", Type: field.TypeUUID},
+		{Name: "permission_id", Type: field.TypeUUID},
+	}
+	// RolePermissionsTable holds the schema information for the "role_permissions" table.
+	RolePermissionsTable = &schema.Table{
+		Name:       "role_permissions",
+		Columns:    RolePermissionsColumns,
+		PrimaryKey: []*schema.Column{RolePermissionsColumns[0], RolePermissionsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "role_permissions_role_id",
+				Columns:    []*schema.Column{RolePermissionsColumns[0]},
+				RefColumns: []*schema.Column{RolesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "role_permissions_permission_id",
+				Columns:    []*schema.Column{RolePermissionsColumns[1]},
+				RefColumns: []*schema.Column{PermissionsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AuditLogsTable,
 		AuthorizationCodesTable,
+		BackupCodesTable,
 		DevicesTable,
 		EmailVerificationTokensTable,
+		IPRulesTable,
 		LoginAttemptsTable,
 		OauthClientsTable,
 		OauthConsentsTable,
 		OauthRedirectUrIsTable,
 		OauthScopesTable,
+		OrganizationsTable,
+		OrganizationMembersTable,
 		PasswordCredentialsTable,
 		PasswordResetTokensTable,
+		PermissionsTable,
+		PersonalTokensTable,
 		RefreshTokensTable,
+		RolesTable,
 		SessionsTable,
 		SigningKeysTable,
+		SystemConfigsTable,
 		UsersTable,
+		UserEmailsTable,
+		UserPhonesTable,
 		UserProfilesTable,
+		UserRolesTable,
+		WebhooksTable,
+		WebhookEventsTable,
+		RolePermissionsTable,
 	}
 )
 
 func init() {
 	AuditLogsTable.ForeignKeys[0].RefTable = UsersTable
+	BackupCodesTable.ForeignKeys[0].RefTable = UsersTable
 	DevicesTable.ForeignKeys[0].RefTable = UsersTable
 	OauthConsentsTable.ForeignKeys[0].RefTable = OauthClientsTable
 	OauthConsentsTable.ForeignKeys[1].RefTable = UsersTable
 	OauthRedirectUrIsTable.ForeignKeys[0].RefTable = OauthClientsTable
+	OrganizationMembersTable.ForeignKeys[0].RefTable = OrganizationsTable
 	PasswordCredentialsTable.ForeignKeys[0].RefTable = UsersTable
+	PersonalTokensTable.ForeignKeys[0].RefTable = UsersTable
 	RefreshTokensTable.ForeignKeys[0].RefTable = UsersTable
 	SessionsTable.ForeignKeys[0].RefTable = DevicesTable
 	SessionsTable.ForeignKeys[1].RefTable = UsersTable
+	UserEmailsTable.ForeignKeys[0].RefTable = UsersTable
+	UserPhonesTable.ForeignKeys[0].RefTable = UsersTable
 	UserProfilesTable.ForeignKeys[0].RefTable = UsersTable
+	UserRolesTable.ForeignKeys[0].RefTable = RolesTable
+	UserRolesTable.ForeignKeys[1].RefTable = UsersTable
+	WebhookEventsTable.ForeignKeys[0].RefTable = WebhooksTable
+	RolePermissionsTable.ForeignKeys[0].RefTable = RolesTable
+	RolePermissionsTable.ForeignKeys[1].RefTable = PermissionsTable
 }

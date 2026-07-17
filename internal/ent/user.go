@@ -62,9 +62,19 @@ type UserEdges struct {
 	OauthConsents []*OAuthConsent `json:"oauth_consents,omitempty"`
 	// RefreshTokens holds the value of the refresh_tokens edge.
 	RefreshTokens []*RefreshToken `json:"refresh_tokens,omitempty"`
+	// PersonalTokens holds the value of the personal_tokens edge.
+	PersonalTokens []*PersonalToken `json:"personal_tokens,omitempty"`
+	// BackupCodes holds the value of the backup_codes edge.
+	BackupCodes []*BackupCode `json:"backup_codes,omitempty"`
+	// Emails holds the value of the emails edge.
+	Emails []*UserEmail `json:"emails,omitempty"`
+	// Phones holds the value of the phones edge.
+	Phones []*UserPhone `json:"phones,omitempty"`
+	// Roles holds the value of the roles edge.
+	Roles []*UserRole `json:"roles,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [12]bool
 }
 
 // PasswordCredentialOrErr returns the PasswordCredential value or an error if the edge
@@ -132,6 +142,51 @@ func (e UserEdges) RefreshTokensOrErr() ([]*RefreshToken, error) {
 		return e.RefreshTokens, nil
 	}
 	return nil, &NotLoadedError{edge: "refresh_tokens"}
+}
+
+// PersonalTokensOrErr returns the PersonalTokens value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PersonalTokensOrErr() ([]*PersonalToken, error) {
+	if e.loadedTypes[7] {
+		return e.PersonalTokens, nil
+	}
+	return nil, &NotLoadedError{edge: "personal_tokens"}
+}
+
+// BackupCodesOrErr returns the BackupCodes value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) BackupCodesOrErr() ([]*BackupCode, error) {
+	if e.loadedTypes[8] {
+		return e.BackupCodes, nil
+	}
+	return nil, &NotLoadedError{edge: "backup_codes"}
+}
+
+// EmailsOrErr returns the Emails value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) EmailsOrErr() ([]*UserEmail, error) {
+	if e.loadedTypes[9] {
+		return e.Emails, nil
+	}
+	return nil, &NotLoadedError{edge: "emails"}
+}
+
+// PhonesOrErr returns the Phones value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) PhonesOrErr() ([]*UserPhone, error) {
+	if e.loadedTypes[10] {
+		return e.Phones, nil
+	}
+	return nil, &NotLoadedError{edge: "phones"}
+}
+
+// RolesOrErr returns the Roles value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) RolesOrErr() ([]*UserRole, error) {
+	if e.loadedTypes[11] {
+		return e.Roles, nil
+	}
+	return nil, &NotLoadedError{edge: "roles"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -275,6 +330,31 @@ func (_m *User) QueryOauthConsents() *OAuthConsentQuery {
 // QueryRefreshTokens queries the "refresh_tokens" edge of the User entity.
 func (_m *User) QueryRefreshTokens() *RefreshTokenQuery {
 	return NewUserClient(_m.config).QueryRefreshTokens(_m)
+}
+
+// QueryPersonalTokens queries the "personal_tokens" edge of the User entity.
+func (_m *User) QueryPersonalTokens() *PersonalTokenQuery {
+	return NewUserClient(_m.config).QueryPersonalTokens(_m)
+}
+
+// QueryBackupCodes queries the "backup_codes" edge of the User entity.
+func (_m *User) QueryBackupCodes() *BackupCodeQuery {
+	return NewUserClient(_m.config).QueryBackupCodes(_m)
+}
+
+// QueryEmails queries the "emails" edge of the User entity.
+func (_m *User) QueryEmails() *UserEmailQuery {
+	return NewUserClient(_m.config).QueryEmails(_m)
+}
+
+// QueryPhones queries the "phones" edge of the User entity.
+func (_m *User) QueryPhones() *UserPhoneQuery {
+	return NewUserClient(_m.config).QueryPhones(_m)
+}
+
+// QueryRoles queries the "roles" edge of the User entity.
+func (_m *User) QueryRoles() *UserRoleQuery {
+	return NewUserClient(_m.config).QueryRoles(_m)
 }
 
 // Update returns a builder for updating this User.

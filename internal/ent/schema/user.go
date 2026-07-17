@@ -39,6 +39,11 @@ func (User) Edges() []ent.Edge {
 		edge.To("audit_logs", AuditLog.Type),
 		edge.To("oauth_consents", OAuthConsent.Type),
 		edge.To("refresh_tokens", RefreshToken.Type),
+		edge.To("personal_tokens", PersonalToken.Type),
+		edge.To("backup_codes", BackupCode.Type),
+		edge.To("emails", UserEmail.Type),
+		edge.To("phones", UserPhone.Type),
+		edge.To("roles", UserRole.Type),
 	}
 }
 

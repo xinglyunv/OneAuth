@@ -1,9 +1,10 @@
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN">
-      <body style={{ margin: 0, fontFamily: "-apple-system, sans-serif", background: "#f5f5f5" }}>
-        {children}
-      </body>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </head>
+      <body>{children}</body>
     </html>
   )
 }

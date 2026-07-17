@@ -14,20 +14,33 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/identity-platform/internal/ent/auditlog"
 	"github.com/identity-platform/internal/ent/authorizationcode"
+	"github.com/identity-platform/internal/ent/backupcode"
 	"github.com/identity-platform/internal/ent/device"
 	"github.com/identity-platform/internal/ent/emailverificationtoken"
+	"github.com/identity-platform/internal/ent/iprule"
 	"github.com/identity-platform/internal/ent/loginattempt"
 	"github.com/identity-platform/internal/ent/oauthclient"
 	"github.com/identity-platform/internal/ent/oauthconsent"
 	"github.com/identity-platform/internal/ent/oauthredirecturi"
 	"github.com/identity-platform/internal/ent/oauthscope"
+	"github.com/identity-platform/internal/ent/organization"
+	"github.com/identity-platform/internal/ent/organizationmember"
 	"github.com/identity-platform/internal/ent/passwordcredential"
 	"github.com/identity-platform/internal/ent/passwordresettoken"
+	"github.com/identity-platform/internal/ent/permission"
+	"github.com/identity-platform/internal/ent/personaltoken"
 	"github.com/identity-platform/internal/ent/refreshtoken"
+	"github.com/identity-platform/internal/ent/role"
 	"github.com/identity-platform/internal/ent/session"
 	"github.com/identity-platform/internal/ent/signingkey"
+	"github.com/identity-platform/internal/ent/systemconfig"
 	"github.com/identity-platform/internal/ent/user"
+	"github.com/identity-platform/internal/ent/useremail"
+	"github.com/identity-platform/internal/ent/userphone"
 	"github.com/identity-platform/internal/ent/userprofile"
+	"github.com/identity-platform/internal/ent/userrole"
+	"github.com/identity-platform/internal/ent/webhook"
+	"github.com/identity-platform/internal/ent/webhookevent"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -90,20 +103,33 @@ func checkColumn(t, c string) error {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			auditlog.Table:               auditlog.ValidColumn,
 			authorizationcode.Table:      authorizationcode.ValidColumn,
+			backupcode.Table:             backupcode.ValidColumn,
 			device.Table:                 device.ValidColumn,
 			emailverificationtoken.Table: emailverificationtoken.ValidColumn,
+			iprule.Table:                 iprule.ValidColumn,
 			loginattempt.Table:           loginattempt.ValidColumn,
 			oauthclient.Table:            oauthclient.ValidColumn,
 			oauthconsent.Table:           oauthconsent.ValidColumn,
 			oauthredirecturi.Table:       oauthredirecturi.ValidColumn,
 			oauthscope.Table:             oauthscope.ValidColumn,
+			organization.Table:           organization.ValidColumn,
+			organizationmember.Table:     organizationmember.ValidColumn,
 			passwordcredential.Table:     passwordcredential.ValidColumn,
 			passwordresettoken.Table:     passwordresettoken.ValidColumn,
+			permission.Table:             permission.ValidColumn,
+			personaltoken.Table:          personaltoken.ValidColumn,
 			refreshtoken.Table:           refreshtoken.ValidColumn,
+			role.Table:                   role.ValidColumn,
 			session.Table:                session.ValidColumn,
 			signingkey.Table:             signingkey.ValidColumn,
+			systemconfig.Table:           systemconfig.ValidColumn,
 			user.Table:                   user.ValidColumn,
+			useremail.Table:              useremail.ValidColumn,
+			userphone.Table:              userphone.ValidColumn,
 			userprofile.Table:            userprofile.ValidColumn,
+			userrole.Table:               userrole.ValidColumn,
+			webhook.Table:                webhook.ValidColumn,
+			webhookevent.Table:           webhookevent.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

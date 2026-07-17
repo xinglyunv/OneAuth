@@ -11,6 +11,7 @@ import (
 	"github.com/identity-platform/internal/ent/user"
 	"github.com/identity-platform/internal/pkg/totp"
 	pbauth "github.com/identity-platform/proto/auth"
+	"go.uber.org/zap"
 )
 
 func (s *Service) EnableMFA(ctx context.Context, req *pbauth.EnableMFARequest) (*pbauth.EnableMFAResponse, error) {
@@ -98,10 +99,21 @@ func (s *Service) ValidateMFA(ctx context.Context, req *pbauth.ValidateMFAReques
 	}
 	refreshTokenHash := hashToken(refreshToken)
 
+	roles, err := s.GetUserRoles(ctx, u.ID)
+	if err != nil {
+		s.logger.Warn("failed to get user roles for MFA session", zap.Error(err))
+	}
+	primaryRole := "user"
+	if len(roles) > 0 {
+		primaryRole = roles[0]
+	}
+
 	_, err = s.client.Session.Create().
 		SetID(sessionID).
 		SetUserID(u.ID).
 		SetTokenHash(refreshTokenHash).
+		SetRole(primaryRole).
+		SetLoginType(session.LoginTypeNormal).
 		SetStatus(session.StatusActive).
 		SetExpiresAt(time.Now().Add(30 * 24 * time.Hour)).
 		Save(ctx)

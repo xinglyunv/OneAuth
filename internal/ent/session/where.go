@@ -81,6 +81,11 @@ func UserAgent(v string) predicate.Session {
 	return predicate.Session(sql.FieldEQ(FieldUserAgent, v))
 }
 
+// Role applies equality check predicate on the "role" field. It's identical to RoleEQ.
+func Role(v string) predicate.Session {
+	return predicate.Session(sql.FieldEQ(FieldRole, v))
+}
+
 // ExpiresAt applies equality check predicate on the "expires_at" field. It's identical to ExpiresAtEQ.
 func ExpiresAt(v time.Time) predicate.Session {
 	return predicate.Session(sql.FieldEQ(FieldExpiresAt, v))
@@ -384,6 +389,101 @@ func StatusIn(vs ...Status) predicate.Session {
 // StatusNotIn applies the NotIn predicate on the "status" field.
 func StatusNotIn(vs ...Status) predicate.Session {
 	return predicate.Session(sql.FieldNotIn(FieldStatus, vs...))
+}
+
+// RoleEQ applies the EQ predicate on the "role" field.
+func RoleEQ(v string) predicate.Session {
+	return predicate.Session(sql.FieldEQ(FieldRole, v))
+}
+
+// RoleNEQ applies the NEQ predicate on the "role" field.
+func RoleNEQ(v string) predicate.Session {
+	return predicate.Session(sql.FieldNEQ(FieldRole, v))
+}
+
+// RoleIn applies the In predicate on the "role" field.
+func RoleIn(vs ...string) predicate.Session {
+	return predicate.Session(sql.FieldIn(FieldRole, vs...))
+}
+
+// RoleNotIn applies the NotIn predicate on the "role" field.
+func RoleNotIn(vs ...string) predicate.Session {
+	return predicate.Session(sql.FieldNotIn(FieldRole, vs...))
+}
+
+// RoleGT applies the GT predicate on the "role" field.
+func RoleGT(v string) predicate.Session {
+	return predicate.Session(sql.FieldGT(FieldRole, v))
+}
+
+// RoleGTE applies the GTE predicate on the "role" field.
+func RoleGTE(v string) predicate.Session {
+	return predicate.Session(sql.FieldGTE(FieldRole, v))
+}
+
+// RoleLT applies the LT predicate on the "role" field.
+func RoleLT(v string) predicate.Session {
+	return predicate.Session(sql.FieldLT(FieldRole, v))
+}
+
+// RoleLTE applies the LTE predicate on the "role" field.
+func RoleLTE(v string) predicate.Session {
+	return predicate.Session(sql.FieldLTE(FieldRole, v))
+}
+
+// RoleContains applies the Contains predicate on the "role" field.
+func RoleContains(v string) predicate.Session {
+	return predicate.Session(sql.FieldContains(FieldRole, v))
+}
+
+// RoleHasPrefix applies the HasPrefix predicate on the "role" field.
+func RoleHasPrefix(v string) predicate.Session {
+	return predicate.Session(sql.FieldHasPrefix(FieldRole, v))
+}
+
+// RoleHasSuffix applies the HasSuffix predicate on the "role" field.
+func RoleHasSuffix(v string) predicate.Session {
+	return predicate.Session(sql.FieldHasSuffix(FieldRole, v))
+}
+
+// RoleIsNil applies the IsNil predicate on the "role" field.
+func RoleIsNil() predicate.Session {
+	return predicate.Session(sql.FieldIsNull(FieldRole))
+}
+
+// RoleNotNil applies the NotNil predicate on the "role" field.
+func RoleNotNil() predicate.Session {
+	return predicate.Session(sql.FieldNotNull(FieldRole))
+}
+
+// RoleEqualFold applies the EqualFold predicate on the "role" field.
+func RoleEqualFold(v string) predicate.Session {
+	return predicate.Session(sql.FieldEqualFold(FieldRole, v))
+}
+
+// RoleContainsFold applies the ContainsFold predicate on the "role" field.
+func RoleContainsFold(v string) predicate.Session {
+	return predicate.Session(sql.FieldContainsFold(FieldRole, v))
+}
+
+// LoginTypeEQ applies the EQ predicate on the "login_type" field.
+func LoginTypeEQ(v LoginType) predicate.Session {
+	return predicate.Session(sql.FieldEQ(FieldLoginType, v))
+}
+
+// LoginTypeNEQ applies the NEQ predicate on the "login_type" field.
+func LoginTypeNEQ(v LoginType) predicate.Session {
+	return predicate.Session(sql.FieldNEQ(FieldLoginType, v))
+}
+
+// LoginTypeIn applies the In predicate on the "login_type" field.
+func LoginTypeIn(vs ...LoginType) predicate.Session {
+	return predicate.Session(sql.FieldIn(FieldLoginType, vs...))
+}
+
+// LoginTypeNotIn applies the NotIn predicate on the "login_type" field.
+func LoginTypeNotIn(vs ...LoginType) predicate.Session {
+	return predicate.Session(sql.FieldNotIn(FieldLoginType, vs...))
 }
 
 // ExpiresAtEQ applies the EQ predicate on the "expires_at" field.

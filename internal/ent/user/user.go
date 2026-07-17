@@ -50,6 +50,16 @@ const (
 	EdgeOauthConsents = "oauth_consents"
 	// EdgeRefreshTokens holds the string denoting the refresh_tokens edge name in mutations.
 	EdgeRefreshTokens = "refresh_tokens"
+	// EdgePersonalTokens holds the string denoting the personal_tokens edge name in mutations.
+	EdgePersonalTokens = "personal_tokens"
+	// EdgeBackupCodes holds the string denoting the backup_codes edge name in mutations.
+	EdgeBackupCodes = "backup_codes"
+	// EdgeEmails holds the string denoting the emails edge name in mutations.
+	EdgeEmails = "emails"
+	// EdgePhones holds the string denoting the phones edge name in mutations.
+	EdgePhones = "phones"
+	// EdgeRoles holds the string denoting the roles edge name in mutations.
+	EdgeRoles = "roles"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// PasswordCredentialTable is the table that holds the password_credential relation/edge.
@@ -101,6 +111,41 @@ const (
 	RefreshTokensInverseTable = "refresh_tokens"
 	// RefreshTokensColumn is the table column denoting the refresh_tokens relation/edge.
 	RefreshTokensColumn = "user_id"
+	// PersonalTokensTable is the table that holds the personal_tokens relation/edge.
+	PersonalTokensTable = "personal_tokens"
+	// PersonalTokensInverseTable is the table name for the PersonalToken entity.
+	// It exists in this package in order to avoid circular dependency with the "personaltoken" package.
+	PersonalTokensInverseTable = "personal_tokens"
+	// PersonalTokensColumn is the table column denoting the personal_tokens relation/edge.
+	PersonalTokensColumn = "user_id"
+	// BackupCodesTable is the table that holds the backup_codes relation/edge.
+	BackupCodesTable = "backup_codes"
+	// BackupCodesInverseTable is the table name for the BackupCode entity.
+	// It exists in this package in order to avoid circular dependency with the "backupcode" package.
+	BackupCodesInverseTable = "backup_codes"
+	// BackupCodesColumn is the table column denoting the backup_codes relation/edge.
+	BackupCodesColumn = "user_id"
+	// EmailsTable is the table that holds the emails relation/edge.
+	EmailsTable = "user_emails"
+	// EmailsInverseTable is the table name for the UserEmail entity.
+	// It exists in this package in order to avoid circular dependency with the "useremail" package.
+	EmailsInverseTable = "user_emails"
+	// EmailsColumn is the table column denoting the emails relation/edge.
+	EmailsColumn = "user_id"
+	// PhonesTable is the table that holds the phones relation/edge.
+	PhonesTable = "user_phones"
+	// PhonesInverseTable is the table name for the UserPhone entity.
+	// It exists in this package in order to avoid circular dependency with the "userphone" package.
+	PhonesInverseTable = "user_phones"
+	// PhonesColumn is the table column denoting the phones relation/edge.
+	PhonesColumn = "user_id"
+	// RolesTable is the table that holds the roles relation/edge.
+	RolesTable = "user_roles"
+	// RolesInverseTable is the table name for the UserRole entity.
+	// It exists in this package in order to avoid circular dependency with the "userrole" package.
+	RolesInverseTable = "user_roles"
+	// RolesColumn is the table column denoting the roles relation/edge.
+	RolesColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -313,6 +358,76 @@ func ByRefreshTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRefreshTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByPersonalTokensCount orders the results by personal_tokens count.
+func ByPersonalTokensCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPersonalTokensStep(), opts...)
+	}
+}
+
+// ByPersonalTokens orders the results by personal_tokens terms.
+func ByPersonalTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPersonalTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByBackupCodesCount orders the results by backup_codes count.
+func ByBackupCodesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newBackupCodesStep(), opts...)
+	}
+}
+
+// ByBackupCodes orders the results by backup_codes terms.
+func ByBackupCodes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newBackupCodesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByEmailsCount orders the results by emails count.
+func ByEmailsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newEmailsStep(), opts...)
+	}
+}
+
+// ByEmails orders the results by emails terms.
+func ByEmails(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newEmailsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByPhonesCount orders the results by phones count.
+func ByPhonesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newPhonesStep(), opts...)
+	}
+}
+
+// ByPhones orders the results by phones terms.
+func ByPhones(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newPhonesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByRolesCount orders the results by roles count.
+func ByRolesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRolesStep(), opts...)
+	}
+}
+
+// ByRoles orders the results by roles terms.
+func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newPasswordCredentialStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -360,5 +475,40 @@ func newRefreshTokensStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RefreshTokensInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, RefreshTokensTable, RefreshTokensColumn),
+	)
+}
+func newPersonalTokensStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PersonalTokensInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PersonalTokensTable, PersonalTokensColumn),
+	)
+}
+func newBackupCodesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(BackupCodesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, BackupCodesTable, BackupCodesColumn),
+	)
+}
+func newEmailsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(EmailsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, EmailsTable, EmailsColumn),
+	)
+}
+func newPhonesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(PhonesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, PhonesTable, PhonesColumn),
+	)
+}
+func newRolesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RolesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RolesTable, RolesColumn),
 	)
 }

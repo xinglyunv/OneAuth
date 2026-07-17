@@ -14,14 +14,19 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/identity-platform/internal/ent/auditlog"
+	"github.com/identity-platform/internal/ent/backupcode"
 	"github.com/identity-platform/internal/ent/device"
 	"github.com/identity-platform/internal/ent/oauthconsent"
 	"github.com/identity-platform/internal/ent/passwordcredential"
+	"github.com/identity-platform/internal/ent/personaltoken"
 	"github.com/identity-platform/internal/ent/predicate"
 	"github.com/identity-platform/internal/ent/refreshtoken"
 	"github.com/identity-platform/internal/ent/session"
 	"github.com/identity-platform/internal/ent/user"
+	"github.com/identity-platform/internal/ent/useremail"
+	"github.com/identity-platform/internal/ent/userphone"
 	"github.com/identity-platform/internal/ent/userprofile"
+	"github.com/identity-platform/internal/ent/userrole"
 )
 
 // UserQuery is the builder for querying User entities.
@@ -38,6 +43,11 @@ type UserQuery struct {
 	withAuditLogs          *AuditLogQuery
 	withOauthConsents      *OAuthConsentQuery
 	withRefreshTokens      *RefreshTokenQuery
+	withPersonalTokens     *PersonalTokenQuery
+	withBackupCodes        *BackupCodeQuery
+	withEmails             *UserEmailQuery
+	withPhones             *UserPhoneQuery
+	withRoles              *UserRoleQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -221,6 +231,116 @@ func (_q *UserQuery) QueryRefreshTokens() *RefreshTokenQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(refreshtoken.Table, refreshtoken.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.RefreshTokensTable, user.RefreshTokensColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPersonalTokens chains the current query on the "personal_tokens" edge.
+func (_q *UserQuery) QueryPersonalTokens() *PersonalTokenQuery {
+	query := (&PersonalTokenClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(personaltoken.Table, personaltoken.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PersonalTokensTable, user.PersonalTokensColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryBackupCodes chains the current query on the "backup_codes" edge.
+func (_q *UserQuery) QueryBackupCodes() *BackupCodeQuery {
+	query := (&BackupCodeClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(backupcode.Table, backupcode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.BackupCodesTable, user.BackupCodesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryEmails chains the current query on the "emails" edge.
+func (_q *UserQuery) QueryEmails() *UserEmailQuery {
+	query := (&UserEmailClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(useremail.Table, useremail.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.EmailsTable, user.EmailsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPhones chains the current query on the "phones" edge.
+func (_q *UserQuery) QueryPhones() *UserPhoneQuery {
+	query := (&UserPhoneClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(userphone.Table, userphone.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.PhonesTable, user.PhonesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryRoles chains the current query on the "roles" edge.
+func (_q *UserQuery) QueryRoles() *UserRoleQuery {
+	query := (&UserRoleClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(userrole.Table, userrole.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.RolesTable, user.RolesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -427,6 +547,11 @@ func (_q *UserQuery) Clone() *UserQuery {
 		withAuditLogs:          _q.withAuditLogs.Clone(),
 		withOauthConsents:      _q.withOauthConsents.Clone(),
 		withRefreshTokens:      _q.withRefreshTokens.Clone(),
+		withPersonalTokens:     _q.withPersonalTokens.Clone(),
+		withBackupCodes:        _q.withBackupCodes.Clone(),
+		withEmails:             _q.withEmails.Clone(),
+		withPhones:             _q.withPhones.Clone(),
+		withRoles:              _q.withRoles.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -510,6 +635,61 @@ func (_q *UserQuery) WithRefreshTokens(opts ...func(*RefreshTokenQuery)) *UserQu
 	return _q
 }
 
+// WithPersonalTokens tells the query-builder to eager-load the nodes that are connected to
+// the "personal_tokens" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithPersonalTokens(opts ...func(*PersonalTokenQuery)) *UserQuery {
+	query := (&PersonalTokenClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPersonalTokens = query
+	return _q
+}
+
+// WithBackupCodes tells the query-builder to eager-load the nodes that are connected to
+// the "backup_codes" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithBackupCodes(opts ...func(*BackupCodeQuery)) *UserQuery {
+	query := (&BackupCodeClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withBackupCodes = query
+	return _q
+}
+
+// WithEmails tells the query-builder to eager-load the nodes that are connected to
+// the "emails" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithEmails(opts ...func(*UserEmailQuery)) *UserQuery {
+	query := (&UserEmailClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withEmails = query
+	return _q
+}
+
+// WithPhones tells the query-builder to eager-load the nodes that are connected to
+// the "phones" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithPhones(opts ...func(*UserPhoneQuery)) *UserQuery {
+	query := (&UserPhoneClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withPhones = query
+	return _q
+}
+
+// WithRoles tells the query-builder to eager-load the nodes that are connected to
+// the "roles" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithRoles(opts ...func(*UserRoleQuery)) *UserQuery {
+	query := (&UserRoleClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withRoles = query
+	return _q
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
@@ -588,7 +768,7 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [7]bool{
+		loadedTypes = [12]bool{
 			_q.withPasswordCredential != nil,
 			_q.withProfile != nil,
 			_q.withSessions != nil,
@@ -596,6 +776,11 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			_q.withAuditLogs != nil,
 			_q.withOauthConsents != nil,
 			_q.withRefreshTokens != nil,
+			_q.withPersonalTokens != nil,
+			_q.withBackupCodes != nil,
+			_q.withEmails != nil,
+			_q.withPhones != nil,
+			_q.withRoles != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -660,6 +845,41 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := _q.loadRefreshTokens(ctx, query, nodes,
 			func(n *User) { n.Edges.RefreshTokens = []*RefreshToken{} },
 			func(n *User, e *RefreshToken) { n.Edges.RefreshTokens = append(n.Edges.RefreshTokens, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPersonalTokens; query != nil {
+		if err := _q.loadPersonalTokens(ctx, query, nodes,
+			func(n *User) { n.Edges.PersonalTokens = []*PersonalToken{} },
+			func(n *User, e *PersonalToken) { n.Edges.PersonalTokens = append(n.Edges.PersonalTokens, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withBackupCodes; query != nil {
+		if err := _q.loadBackupCodes(ctx, query, nodes,
+			func(n *User) { n.Edges.BackupCodes = []*BackupCode{} },
+			func(n *User, e *BackupCode) { n.Edges.BackupCodes = append(n.Edges.BackupCodes, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withEmails; query != nil {
+		if err := _q.loadEmails(ctx, query, nodes,
+			func(n *User) { n.Edges.Emails = []*UserEmail{} },
+			func(n *User, e *UserEmail) { n.Edges.Emails = append(n.Edges.Emails, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withPhones; query != nil {
+		if err := _q.loadPhones(ctx, query, nodes,
+			func(n *User) { n.Edges.Phones = []*UserPhone{} },
+			func(n *User, e *UserPhone) { n.Edges.Phones = append(n.Edges.Phones, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withRoles; query != nil {
+		if err := _q.loadRoles(ctx, query, nodes,
+			func(n *User) { n.Edges.Roles = []*UserRole{} },
+			func(n *User, e *UserRole) { n.Edges.Roles = append(n.Edges.Roles, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -855,6 +1075,156 @@ func (_q *UserQuery) loadRefreshTokens(ctx context.Context, query *RefreshTokenQ
 	}
 	query.Where(predicate.RefreshToken(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.RefreshTokensColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadPersonalTokens(ctx context.Context, query *PersonalTokenQuery, nodes []*User, init func(*User), assign func(*User, *PersonalToken)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(personaltoken.FieldUserID)
+	}
+	query.Where(predicate.PersonalToken(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.PersonalTokensColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadBackupCodes(ctx context.Context, query *BackupCodeQuery, nodes []*User, init func(*User), assign func(*User, *BackupCode)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(backupcode.FieldUserID)
+	}
+	query.Where(predicate.BackupCode(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.BackupCodesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadEmails(ctx context.Context, query *UserEmailQuery, nodes []*User, init func(*User), assign func(*User, *UserEmail)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(useremail.FieldUserID)
+	}
+	query.Where(predicate.UserEmail(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.EmailsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadPhones(ctx context.Context, query *UserPhoneQuery, nodes []*User, init func(*User), assign func(*User, *UserPhone)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(userphone.FieldUserID)
+	}
+	query.Where(predicate.UserPhone(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.PhonesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadRoles(ctx context.Context, query *UserRoleQuery, nodes []*User, init func(*User), assign func(*User, *UserRole)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(userrole.FieldUserID)
+	}
+	query.Where(predicate.UserRole(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.RolesColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

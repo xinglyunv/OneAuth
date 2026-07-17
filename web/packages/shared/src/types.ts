@@ -28,6 +28,12 @@ export interface LoginResponse {
   status: string
   mfa_enabled: boolean
   created_at: string
+  profile?: {
+    display_name: string
+    avatar_url: string
+    locale: string
+    timezone: string
+  }
 }
 
 export interface MFAResponse {
@@ -83,4 +89,15 @@ export interface UserAuthorization {
   app_name: string
   scopes: string[]
   created_at: string
+}
+
+export interface GetMeResponse {
+  user_id: string
+  email: string
+  username: string
+  status: string
+  role: string
+  app_count: number
+  created_at: string
+  profile: Record<string, string>
 }

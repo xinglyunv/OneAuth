@@ -1,11 +1,11 @@
-import { LoginResponse, MFAResponse, MFASetupResponse, RegisterResponse, UserProfile, OAuthApp, CreateAppResponse } from "./types"
+import { GetMeResponse, LoginResponse, MFAResponse, MFASetupResponse, RegisterResponse, UserProfile, OAuthApp, CreateAppResponse, Session } from "./types"
 
-const BASE_URL = typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL : "http://localhost:8080"
+const BASE_URL = typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL : ""
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...options.headers },
     ...options,
+    headers: { "Content-Type": "application/json", ...(options.headers as Record<string, string>) },
   })
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: res.statusText }))
@@ -49,13 +49,19 @@ export const api = {
   disableMFA: (token: string, code: string) =>
     request("/api/user/mfa/disable", { method: "POST", headers: authHeaders(token), body: JSON.stringify({ totp_code: code }) }),
 
-  listSessions: (token: string) =>
+  listSessions: (token: string): Promise<{ sessions: Session[] }> =>
     request("/api/user/sessions", { headers: authHeaders(token) }),
+
+  updateProfile: (token: string, data: { display_name?: string; avatar_url?: string; locale?: string; timezone?: string }) =>
+    request("/api/user/profile", { method: "PUT", headers: authHeaders(token), body: JSON.stringify(data) }),
+
+  changePassword: (token: string, data: { old_password: string; new_password: string }) =>
+    request("/api/user/password", { method: "POST", headers: authHeaders(token), body: JSON.stringify(data) }),
 
   revokeSession: (token: string, sessionId: string) =>
     request(`/api/user/sessions/${sessionId}`, { method: "DELETE", headers: authHeaders(token) }),
 
-  listApps: (token: string) =>
+  listApps: (token: string): Promise<{ apps: OAuthApp[] }> =>
     request("/api/apps", { headers: authHeaders(token) }),
 
   createApp: (token: string, data: { name: string; description: string; redirect_uris: string[] }): Promise<CreateAppResponse> =>
@@ -66,4 +72,9 @@ export const api = {
 
   revokeAppAuth: (token: string, clientId: string) =>
     request(`/api/user/authorized-apps/${clientId}`, { method: "DELETE", headers: authHeaders(token) }),
+
+  getMe: (): Promise<GetMeResponse> => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : ""
+    return request("/api/me", { headers: authHeaders(token || "") })
+  },
 }

@@ -14,6 +14,7 @@ type Config struct {
 	JWT      JWTConfig      `mapstructure:"jwt"`
 	Email    EmailConfig    `mapstructure:"email"`
 	MFA      MFAConfig      `mapstructure:"mfa"`
+	Admin    AdminConfig    `mapstructure:"admin"`
 	Logging  LoggingConfig  `mapstructure:"logging"`
 }
 
@@ -63,6 +64,11 @@ type EmailConfig struct {
 	Username    string `mapstructure:"username"`
 	Password    string `mapstructure:"password"`
 	FromAddress string `mapstructure:"from_address"`
+}
+
+type AdminConfig struct {
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
 }
 
 type MFAConfig struct {

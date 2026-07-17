@@ -23,6 +23,8 @@ func (Session) Fields() []ent.Field {
 		field.String("ip_address").Optional(),
 		field.Text("user_agent").Optional(),
 		field.Enum("status").Values("active", "revoked", "expired").Default("active"),
+		field.String("role").Optional(),
+		field.Enum("login_type").Values("normal", "oauth", "developer", "admin").Default("normal"),
 		field.Time("expires_at"),
 		field.Time("created_at").Default(time.Now).Immutable(),
 		field.Time("last_active_at").Default(time.Now),

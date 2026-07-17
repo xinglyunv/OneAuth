@@ -133,6 +133,40 @@ func (_u *SessionUpdate) SetNillableStatus(v *session.Status) *SessionUpdate {
 	return _u
 }
 
+// SetRole sets the "role" field.
+func (_u *SessionUpdate) SetRole(v string) *SessionUpdate {
+	_u.mutation.SetRole(v)
+	return _u
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (_u *SessionUpdate) SetNillableRole(v *string) *SessionUpdate {
+	if v != nil {
+		_u.SetRole(*v)
+	}
+	return _u
+}
+
+// ClearRole clears the value of the "role" field.
+func (_u *SessionUpdate) ClearRole() *SessionUpdate {
+	_u.mutation.ClearRole()
+	return _u
+}
+
+// SetLoginType sets the "login_type" field.
+func (_u *SessionUpdate) SetLoginType(v session.LoginType) *SessionUpdate {
+	_u.mutation.SetLoginType(v)
+	return _u
+}
+
+// SetNillableLoginType sets the "login_type" field if the given value is not nil.
+func (_u *SessionUpdate) SetNillableLoginType(v *session.LoginType) *SessionUpdate {
+	if v != nil {
+		_u.SetLoginType(*v)
+	}
+	return _u
+}
+
 // SetExpiresAt sets the "expires_at" field.
 func (_u *SessionUpdate) SetExpiresAt(v time.Time) *SessionUpdate {
 	_u.mutation.SetExpiresAt(v)
@@ -247,6 +281,11 @@ func (_u *SessionUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Session.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.LoginType(); ok {
+		if err := session.LoginTypeValidator(v); err != nil {
+			return &ValidationError{Name: "login_type", err: fmt.Errorf(`ent: validator failed for field "Session.login_type": %w`, err)}
+		}
+	}
 	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Session.user"`)
 	}
@@ -282,6 +321,15 @@ func (_u *SessionUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(session.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Role(); ok {
+		_spec.SetField(session.FieldRole, field.TypeString, value)
+	}
+	if _u.mutation.RoleCleared() {
+		_spec.ClearField(session.FieldRole, field.TypeString)
+	}
+	if value, ok := _u.mutation.LoginType(); ok {
+		_spec.SetField(session.FieldLoginType, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.ExpiresAt(); ok {
 		_spec.SetField(session.FieldExpiresAt, field.TypeTime, value)
@@ -475,6 +523,40 @@ func (_u *SessionUpdateOne) SetNillableStatus(v *session.Status) *SessionUpdateO
 	return _u
 }
 
+// SetRole sets the "role" field.
+func (_u *SessionUpdateOne) SetRole(v string) *SessionUpdateOne {
+	_u.mutation.SetRole(v)
+	return _u
+}
+
+// SetNillableRole sets the "role" field if the given value is not nil.
+func (_u *SessionUpdateOne) SetNillableRole(v *string) *SessionUpdateOne {
+	if v != nil {
+		_u.SetRole(*v)
+	}
+	return _u
+}
+
+// ClearRole clears the value of the "role" field.
+func (_u *SessionUpdateOne) ClearRole() *SessionUpdateOne {
+	_u.mutation.ClearRole()
+	return _u
+}
+
+// SetLoginType sets the "login_type" field.
+func (_u *SessionUpdateOne) SetLoginType(v session.LoginType) *SessionUpdateOne {
+	_u.mutation.SetLoginType(v)
+	return _u
+}
+
+// SetNillableLoginType sets the "login_type" field if the given value is not nil.
+func (_u *SessionUpdateOne) SetNillableLoginType(v *session.LoginType) *SessionUpdateOne {
+	if v != nil {
+		_u.SetLoginType(*v)
+	}
+	return _u
+}
+
 // SetExpiresAt sets the "expires_at" field.
 func (_u *SessionUpdateOne) SetExpiresAt(v time.Time) *SessionUpdateOne {
 	_u.mutation.SetExpiresAt(v)
@@ -602,6 +684,11 @@ func (_u *SessionUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Session.status": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.LoginType(); ok {
+		if err := session.LoginTypeValidator(v); err != nil {
+			return &ValidationError{Name: "login_type", err: fmt.Errorf(`ent: validator failed for field "Session.login_type": %w`, err)}
+		}
+	}
 	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Session.user"`)
 	}
@@ -654,6 +741,15 @@ func (_u *SessionUpdateOne) sqlSave(ctx context.Context) (_node *Session, err er
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(session.FieldStatus, field.TypeEnum, value)
+	}
+	if value, ok := _u.mutation.Role(); ok {
+		_spec.SetField(session.FieldRole, field.TypeString, value)
+	}
+	if _u.mutation.RoleCleared() {
+		_spec.ClearField(session.FieldRole, field.TypeString)
+	}
+	if value, ok := _u.mutation.LoginType(); ok {
+		_spec.SetField(session.FieldLoginType, field.TypeEnum, value)
 	}
 	if value, ok := _u.mutation.ExpiresAt(); ok {
 		_spec.SetField(session.FieldExpiresAt, field.TypeTime, value)

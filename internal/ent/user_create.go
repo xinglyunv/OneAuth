@@ -12,13 +12,18 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/google/uuid"
 	"github.com/identity-platform/internal/ent/auditlog"
+	"github.com/identity-platform/internal/ent/backupcode"
 	"github.com/identity-platform/internal/ent/device"
 	"github.com/identity-platform/internal/ent/oauthconsent"
 	"github.com/identity-platform/internal/ent/passwordcredential"
+	"github.com/identity-platform/internal/ent/personaltoken"
 	"github.com/identity-platform/internal/ent/refreshtoken"
 	"github.com/identity-platform/internal/ent/session"
 	"github.com/identity-platform/internal/ent/user"
+	"github.com/identity-platform/internal/ent/useremail"
+	"github.com/identity-platform/internal/ent/userphone"
 	"github.com/identity-platform/internal/ent/userprofile"
+	"github.com/identity-platform/internal/ent/userrole"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -285,6 +290,81 @@ func (_c *UserCreate) AddRefreshTokens(v ...*RefreshToken) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddRefreshTokenIDs(ids...)
+}
+
+// AddPersonalTokenIDs adds the "personal_tokens" edge to the PersonalToken entity by IDs.
+func (_c *UserCreate) AddPersonalTokenIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddPersonalTokenIDs(ids...)
+	return _c
+}
+
+// AddPersonalTokens adds the "personal_tokens" edges to the PersonalToken entity.
+func (_c *UserCreate) AddPersonalTokens(v ...*PersonalToken) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPersonalTokenIDs(ids...)
+}
+
+// AddBackupCodeIDs adds the "backup_codes" edge to the BackupCode entity by IDs.
+func (_c *UserCreate) AddBackupCodeIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddBackupCodeIDs(ids...)
+	return _c
+}
+
+// AddBackupCodes adds the "backup_codes" edges to the BackupCode entity.
+func (_c *UserCreate) AddBackupCodes(v ...*BackupCode) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddBackupCodeIDs(ids...)
+}
+
+// AddEmailIDs adds the "emails" edge to the UserEmail entity by IDs.
+func (_c *UserCreate) AddEmailIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddEmailIDs(ids...)
+	return _c
+}
+
+// AddEmails adds the "emails" edges to the UserEmail entity.
+func (_c *UserCreate) AddEmails(v ...*UserEmail) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddEmailIDs(ids...)
+}
+
+// AddPhoneIDs adds the "phones" edge to the UserPhone entity by IDs.
+func (_c *UserCreate) AddPhoneIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddPhoneIDs(ids...)
+	return _c
+}
+
+// AddPhones adds the "phones" edges to the UserPhone entity.
+func (_c *UserCreate) AddPhones(v ...*UserPhone) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddPhoneIDs(ids...)
+}
+
+// AddRoleIDs adds the "roles" edge to the UserRole entity by IDs.
+func (_c *UserCreate) AddRoleIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddRoleIDs(ids...)
+	return _c
+}
+
+// AddRoles adds the "roles" edges to the UserRole entity.
+func (_c *UserCreate) AddRoles(v ...*UserRole) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRoleIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -558,6 +638,86 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(refreshtoken.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PersonalTokensIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PersonalTokensTable,
+			Columns: []string{user.PersonalTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(personaltoken.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.BackupCodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.BackupCodesTable,
+			Columns: []string{user.BackupCodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(backupcode.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.EmailsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.EmailsTable,
+			Columns: []string{user.EmailsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(useremail.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.PhonesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.PhonesTable,
+			Columns: []string{user.PhonesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userphone.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.RolesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RolesTable,
+			Columns: []string{user.RolesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userrole.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

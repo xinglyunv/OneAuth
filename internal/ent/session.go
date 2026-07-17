@@ -32,6 +32,10 @@ type Session struct {
 	UserAgent string `json:"user_agent,omitempty"`
 	// Status holds the value of the "status" field.
 	Status session.Status `json:"status,omitempty"`
+	// Role holds the value of the "role" field.
+	Role string `json:"role,omitempty"`
+	// LoginType holds the value of the "login_type" field.
+	LoginType session.LoginType `json:"login_type,omitempty"`
 	// ExpiresAt holds the value of the "expires_at" field.
 	ExpiresAt time.Time `json:"expires_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -84,7 +88,7 @@ func (*Session) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case session.FieldTokenHash, session.FieldIPAddress, session.FieldUserAgent, session.FieldStatus:
+		case session.FieldTokenHash, session.FieldIPAddress, session.FieldUserAgent, session.FieldStatus, session.FieldRole, session.FieldLoginType:
 			values[i] = new(sql.NullString)
 		case session.FieldExpiresAt, session.FieldCreatedAt, session.FieldLastActiveAt, session.FieldRevokedAt:
 			values[i] = new(sql.NullTime)
@@ -146,6 +150,18 @@ func (_m *Session) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				_m.Status = session.Status(value.String)
+			}
+		case session.FieldRole:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field role", values[i])
+			} else if value.Valid {
+				_m.Role = value.String
+			}
+		case session.FieldLoginType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field login_type", values[i])
+			} else if value.Valid {
+				_m.LoginType = session.LoginType(value.String)
 			}
 		case session.FieldExpiresAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -235,6 +251,12 @@ func (_m *Session) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
+	builder.WriteString(", ")
+	builder.WriteString("role=")
+	builder.WriteString(_m.Role)
+	builder.WriteString(", ")
+	builder.WriteString("login_type=")
+	builder.WriteString(fmt.Sprintf("%v", _m.LoginType))
 	builder.WriteString(", ")
 	builder.WriteString("expires_at=")
 	builder.WriteString(_m.ExpiresAt.Format(time.ANSIC))

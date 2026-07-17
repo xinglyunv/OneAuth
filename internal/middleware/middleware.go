@@ -5,10 +5,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/identity-platform/internal/ent"
+	"github.com/identity-platform/internal/ent/userrole"
 	jwtpkg "github.com/identity-platform/internal/pkg/jwt"
 	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func Logger(logger *zap.Logger) gin.HandlerFunc {
@@ -82,6 +85,42 @@ func JWTAuth(jwt *jwtpkg.TokenManager) gin.HandlerFunc {
 	}
 }
 
+func AdminJWTAuth(jwt *jwtpkg.TokenManager) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})
+			c.Abort()
+			return
+		}
+
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid authorization format"})
+			c.Abort()
+			return
+		}
+
+		claims, err := jwt.VerifyToken(parts[1])
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
+			c.Abort()
+			return
+		}
+
+		if claims.Scope != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "not an admin"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", claims.UserID)
+		c.Set("subject", claims.Subject)
+		c.Set("scope", claims.Scope)
+		c.Next()
+	}
+}
+
 func JWTAuthOptional(jwt *jwtpkg.TokenManager) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -105,5 +144,47 @@ func JWTAuthOptional(jwt *jwtpkg.TokenManager) gin.HandlerFunc {
 		c.Set("user_id", claims.UserID)
 		c.Set("subject", claims.Subject)
 		c.Next()
+	}
+}
+
+func RequireRole(db *ent.Client, allowedRoles ...string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		raw, exists := c.Get("user_id")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			c.Abort()
+			return
+		}
+		uid, err := uuid.Parse(raw.(string))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user"})
+			c.Abort()
+			return
+		}
+
+		urs, err := db.UserRole.Query().
+			Where(userrole.UserID(uid)).
+			WithRole().
+			All(c.Request.Context())
+		if err != nil {
+			c.JSON(http.StatusForbidden, gin.H{"error": "access denied"})
+			c.Abort()
+			return
+		}
+
+		roleNames := make(map[string]bool)
+		for _, ur := range urs {
+			roleNames[ur.Edges.Role.Name] = true
+		}
+
+		for _, allowed := range allowedRoles {
+			if roleNames[allowed] {
+				c.Next()
+				return
+			}
+		}
+
+		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+		c.Abort()
 	}
 }

@@ -13,8 +13,10 @@ import (
 	"github.com/identity-platform/internal/ent"
 	"github.com/identity-platform/internal/ent/device"
 	"github.com/identity-platform/internal/ent/passwordcredential"
+	entrole "github.com/identity-platform/internal/ent/role"
 	"github.com/identity-platform/internal/ent/session"
 	"github.com/identity-platform/internal/ent/user"
+	"github.com/identity-platform/internal/ent/userrole"
 	"github.com/identity-platform/internal/pkg/crypto"
 	jwtpkg "github.com/identity-platform/internal/pkg/jwt"
 	pbauth "github.com/identity-platform/proto/auth"
@@ -52,7 +54,7 @@ func (s *Service) Register(ctx context.Context, req *pbauth.RegisterRequest) (*p
 	}
 	if exists {
 		return &pbauth.RegisterResponse{
-			Message: "registration successful, please check your email",
+			Message: "registration successful",
 		}, nil
 	}
 
@@ -64,7 +66,8 @@ func (s *Service) Register(ctx context.Context, req *pbauth.RegisterRequest) (*p
 	newUser, err := s.client.User.Create().
 		SetEmail(req.Email).
 		SetNillableUsername(nilStr(req.Username)).
-		SetStatus("pending").
+		SetStatus("active").
+		SetEmailVerified(true).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
@@ -84,6 +87,10 @@ func (s *Service) Register(ctx context.Context, req *pbauth.RegisterRequest) (*p
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("create user profile: %w", err)
+	}
+
+	if err := s.AssignUserRole(ctx, newUser.ID, "USER"); err != nil {
+		s.logger.Warn("failed to assign USER role", zap.Error(err))
 	}
 
 	_, err = s.client.AuditLog.Create().
@@ -152,6 +159,15 @@ func (s *Service) Login(ctx context.Context, req *pbauth.LoginRequest) (*pbauth.
 	}
 	refreshTokenHash := hashToken(refreshToken)
 
+	roles, err := s.GetUserRoles(ctx, u.ID)
+	if err != nil {
+		s.logger.Warn("failed to get user roles", zap.Error(err))
+	}
+	primaryRole := "user"
+	if len(roles) > 0 {
+		primaryRole = roles[0]
+	}
+
 	deviceID, err := s.findOrCreateDevice(ctx, u.ID, req.DeviceFingerprint, req.DeviceName, req.UserAgent, req.IpAddress)
 	if err != nil {
 		s.logger.Warn("failed to manage device", zap.Error(err))
@@ -161,6 +177,8 @@ func (s *Service) Login(ctx context.Context, req *pbauth.LoginRequest) (*pbauth.
 		SetID(sessionID).
 		SetUserID(u.ID).
 		SetTokenHash(refreshTokenHash).
+		SetRole(primaryRole).
+		SetLoginType(session.LoginTypeNormal).
 		SetNillableDeviceID(deviceID).
 		SetIPAddress(req.IpAddress).
 		SetUserAgent(req.UserAgent).
@@ -211,6 +229,62 @@ func (s *Service) Logout(ctx context.Context, req *pbauth.LogoutRequest) (*pbaut
 	s.recordAuditLog(ctx, sess.UserID, "LOGOUT", "session", req.SessionId, "", "", nil)
 
 	return &pbauth.LogoutResponse{Message: "logged out"}, nil
+}
+
+func (s *Service) AssignUserRole(ctx context.Context, userID uuid.UUID, roleName string) error {
+	r, err := s.client.Role.Query().Where(entrole.NameEQ(roleName)).Only(ctx)
+	if err != nil {
+		return fmt.Errorf("find role %s: %w", roleName, err)
+	}
+	exists, err := s.client.UserRole.Query().
+		Where(userrole.UserID(userID), userrole.RoleID(r.ID)).
+		Exist(ctx)
+	if err != nil {
+		return fmt.Errorf("check user role: %w", err)
+	}
+	if exists {
+		return nil
+	}
+	_, err = s.client.UserRole.Create().
+		SetUserID(userID).
+		SetRoleID(r.ID).
+		Save(ctx)
+	if err != nil {
+		return fmt.Errorf("assign role: %w", err)
+	}
+	return nil
+}
+
+func (s *Service) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	urs, err := s.client.UserRole.Query().
+		Where(userrole.UserID(userID)).
+		WithRole().
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("query user roles: %w", err)
+	}
+	roles := make([]string, 0, len(urs))
+	for _, ur := range urs {
+		roles = append(roles, ur.Edges.Role.Name)
+	}
+	return roles, nil
+}
+
+func (s *Service) HasRole(ctx context.Context, userID uuid.UUID, roleName string) (bool, error) {
+	r, err := s.client.Role.Query().Where(entrole.NameEQ(roleName)).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("find role: %w", err)
+	}
+	exists, err := s.client.UserRole.Query().
+		Where(userrole.UserID(userID), userrole.RoleID(r.ID)).
+		Exist(ctx)
+	if err != nil {
+		return false, fmt.Errorf("check role: %w", err)
+	}
+	return exists, nil
 }
 
 func (s *Service) findOrCreateDevice(ctx context.Context, userID uuid.UUID, fingerprint, name, userAgent, ip string) (*uuid.UUID, error) {

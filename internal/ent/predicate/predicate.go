@@ -12,11 +12,17 @@ type AuditLog func(*sql.Selector)
 // AuthorizationCode is the predicate function for authorizationcode builders.
 type AuthorizationCode func(*sql.Selector)
 
+// BackupCode is the predicate function for backupcode builders.
+type BackupCode func(*sql.Selector)
+
 // Device is the predicate function for device builders.
 type Device func(*sql.Selector)
 
 // EmailVerificationToken is the predicate function for emailverificationtoken builders.
 type EmailVerificationToken func(*sql.Selector)
+
+// IPRule is the predicate function for iprule builders.
+type IPRule func(*sql.Selector)
 
 // LoginAttempt is the predicate function for loginattempt builders.
 type LoginAttempt func(*sql.Selector)
@@ -33,14 +39,29 @@ type OAuthRedirectURI func(*sql.Selector)
 // OAuthScope is the predicate function for oauthscope builders.
 type OAuthScope func(*sql.Selector)
 
+// Organization is the predicate function for organization builders.
+type Organization func(*sql.Selector)
+
+// OrganizationMember is the predicate function for organizationmember builders.
+type OrganizationMember func(*sql.Selector)
+
 // PasswordCredential is the predicate function for passwordcredential builders.
 type PasswordCredential func(*sql.Selector)
 
 // PasswordResetToken is the predicate function for passwordresettoken builders.
 type PasswordResetToken func(*sql.Selector)
 
+// Permission is the predicate function for permission builders.
+type Permission func(*sql.Selector)
+
+// PersonalToken is the predicate function for personaltoken builders.
+type PersonalToken func(*sql.Selector)
+
 // RefreshToken is the predicate function for refreshtoken builders.
 type RefreshToken func(*sql.Selector)
+
+// Role is the predicate function for role builders.
+type Role func(*sql.Selector)
 
 // Session is the predicate function for session builders.
 type Session func(*sql.Selector)
@@ -48,8 +69,26 @@ type Session func(*sql.Selector)
 // SigningKey is the predicate function for signingkey builders.
 type SigningKey func(*sql.Selector)
 
+// SystemConfig is the predicate function for systemconfig builders.
+type SystemConfig func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 
+// UserEmail is the predicate function for useremail builders.
+type UserEmail func(*sql.Selector)
+
+// UserPhone is the predicate function for userphone builders.
+type UserPhone func(*sql.Selector)
+
 // UserProfile is the predicate function for userprofile builders.
 type UserProfile func(*sql.Selector)
+
+// UserRole is the predicate function for userrole builders.
+type UserRole func(*sql.Selector)
+
+// Webhook is the predicate function for webhook builders.
+type Webhook func(*sql.Selector)
+
+// WebhookEvent is the predicate function for webhookevent builders.
+type WebhookEvent func(*sql.Selector)

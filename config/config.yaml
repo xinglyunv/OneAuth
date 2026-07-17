@@ -35,6 +35,10 @@ email:
 mfa:
   issuer: Identity Platform
 
+admin:
+  username: admin
+  password: admin123
+
 logging:
   level: debug
   format: console

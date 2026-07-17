@@ -18,10 +18,14 @@ type Tx struct {
 	AuditLog *AuditLogClient
 	// AuthorizationCode is the client for interacting with the AuthorizationCode builders.
 	AuthorizationCode *AuthorizationCodeClient
+	// BackupCode is the client for interacting with the BackupCode builders.
+	BackupCode *BackupCodeClient
 	// Device is the client for interacting with the Device builders.
 	Device *DeviceClient
 	// EmailVerificationToken is the client for interacting with the EmailVerificationToken builders.
 	EmailVerificationToken *EmailVerificationTokenClient
+	// IPRule is the client for interacting with the IPRule builders.
+	IPRule *IPRuleClient
 	// LoginAttempt is the client for interacting with the LoginAttempt builders.
 	LoginAttempt *LoginAttemptClient
 	// OAuthClient is the client for interacting with the OAuthClient builders.
@@ -32,20 +36,42 @@ type Tx struct {
 	OAuthRedirectURI *OAuthRedirectURIClient
 	// OAuthScope is the client for interacting with the OAuthScope builders.
 	OAuthScope *OAuthScopeClient
+	// Organization is the client for interacting with the Organization builders.
+	Organization *OrganizationClient
+	// OrganizationMember is the client for interacting with the OrganizationMember builders.
+	OrganizationMember *OrganizationMemberClient
 	// PasswordCredential is the client for interacting with the PasswordCredential builders.
 	PasswordCredential *PasswordCredentialClient
 	// PasswordResetToken is the client for interacting with the PasswordResetToken builders.
 	PasswordResetToken *PasswordResetTokenClient
+	// Permission is the client for interacting with the Permission builders.
+	Permission *PermissionClient
+	// PersonalToken is the client for interacting with the PersonalToken builders.
+	PersonalToken *PersonalTokenClient
 	// RefreshToken is the client for interacting with the RefreshToken builders.
 	RefreshToken *RefreshTokenClient
+	// Role is the client for interacting with the Role builders.
+	Role *RoleClient
 	// Session is the client for interacting with the Session builders.
 	Session *SessionClient
 	// SigningKey is the client for interacting with the SigningKey builders.
 	SigningKey *SigningKeyClient
+	// SystemConfig is the client for interacting with the SystemConfig builders.
+	SystemConfig *SystemConfigClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserEmail is the client for interacting with the UserEmail builders.
+	UserEmail *UserEmailClient
+	// UserPhone is the client for interacting with the UserPhone builders.
+	UserPhone *UserPhoneClient
 	// UserProfile is the client for interacting with the UserProfile builders.
 	UserProfile *UserProfileClient
+	// UserRole is the client for interacting with the UserRole builders.
+	UserRole *UserRoleClient
+	// Webhook is the client for interacting with the Webhook builders.
+	Webhook *WebhookClient
+	// WebhookEvent is the client for interacting with the WebhookEvent builders.
+	WebhookEvent *WebhookEventClient
 
 	// lazily loaded.
 	client     *Client
@@ -179,20 +205,33 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.AuditLog = NewAuditLogClient(tx.config)
 	tx.AuthorizationCode = NewAuthorizationCodeClient(tx.config)
+	tx.BackupCode = NewBackupCodeClient(tx.config)
 	tx.Device = NewDeviceClient(tx.config)
 	tx.EmailVerificationToken = NewEmailVerificationTokenClient(tx.config)
+	tx.IPRule = NewIPRuleClient(tx.config)
 	tx.LoginAttempt = NewLoginAttemptClient(tx.config)
 	tx.OAuthClient = NewOAuthClientClient(tx.config)
 	tx.OAuthConsent = NewOAuthConsentClient(tx.config)
 	tx.OAuthRedirectURI = NewOAuthRedirectURIClient(tx.config)
 	tx.OAuthScope = NewOAuthScopeClient(tx.config)
+	tx.Organization = NewOrganizationClient(tx.config)
+	tx.OrganizationMember = NewOrganizationMemberClient(tx.config)
 	tx.PasswordCredential = NewPasswordCredentialClient(tx.config)
 	tx.PasswordResetToken = NewPasswordResetTokenClient(tx.config)
+	tx.Permission = NewPermissionClient(tx.config)
+	tx.PersonalToken = NewPersonalTokenClient(tx.config)
 	tx.RefreshToken = NewRefreshTokenClient(tx.config)
+	tx.Role = NewRoleClient(tx.config)
 	tx.Session = NewSessionClient(tx.config)
 	tx.SigningKey = NewSigningKeyClient(tx.config)
+	tx.SystemConfig = NewSystemConfigClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.UserEmail = NewUserEmailClient(tx.config)
+	tx.UserPhone = NewUserPhoneClient(tx.config)
 	tx.UserProfile = NewUserProfileClient(tx.config)
+	tx.UserRole = NewUserRoleClient(tx.config)
+	tx.Webhook = NewWebhookClient(tx.config)
+	tx.WebhookEvent = NewWebhookEventClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

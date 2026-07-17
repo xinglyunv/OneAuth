@@ -28,6 +28,10 @@ const (
 	FieldUserAgent = "user_agent"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldRole holds the string denoting the role field in the database.
+	FieldRole = "role"
+	// FieldLoginType holds the string denoting the login_type field in the database.
+	FieldLoginType = "login_type"
 	// FieldExpiresAt holds the string denoting the expires_at field in the database.
 	FieldExpiresAt = "expires_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -67,6 +71,8 @@ var Columns = []string{
 	FieldIPAddress,
 	FieldUserAgent,
 	FieldStatus,
+	FieldRole,
+	FieldLoginType,
 	FieldExpiresAt,
 	FieldCreatedAt,
 	FieldLastActiveAt,
@@ -121,6 +127,34 @@ func StatusValidator(s Status) error {
 	}
 }
 
+// LoginType defines the type for the "login_type" enum field.
+type LoginType string
+
+// LoginTypeNormal is the default value of the LoginType enum.
+const DefaultLoginType = LoginTypeNormal
+
+// LoginType values.
+const (
+	LoginTypeNormal    LoginType = "normal"
+	LoginTypeOauth     LoginType = "oauth"
+	LoginTypeDeveloper LoginType = "developer"
+	LoginTypeAdmin     LoginType = "admin"
+)
+
+func (lt LoginType) String() string {
+	return string(lt)
+}
+
+// LoginTypeValidator is a validator for the "login_type" field enum values. It is called by the builders before save.
+func LoginTypeValidator(lt LoginType) error {
+	switch lt {
+	case LoginTypeNormal, LoginTypeOauth, LoginTypeDeveloper, LoginTypeAdmin:
+		return nil
+	default:
+		return fmt.Errorf("session: invalid enum value for login_type field: %q", lt)
+	}
+}
+
 // OrderOption defines the ordering options for the Session queries.
 type OrderOption func(*sql.Selector)
 
@@ -157,6 +191,16 @@ func ByUserAgent(opts ...sql.OrderTermOption) OrderOption {
 // ByStatus orders the results by the status field.
 func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
+}
+
+// ByRole orders the results by the role field.
+func ByRole(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldRole, opts...).ToFunc()
+}
+
+// ByLoginType orders the results by the login_type field.
+func ByLoginType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLoginType, opts...).ToFunc()
 }
 
 // ByExpiresAt orders the results by the expires_at field.
