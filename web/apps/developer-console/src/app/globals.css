@@ -1,0 +1,96 @@
+/* ========================================
+   Directory Dashboard Design System
+   OneAuth Developer Console
+   ======================================== */
+:root {
+  --dd-canvas: #F5F7F9;
+  --dd-surface: #FFFFFF;
+  --dd-surface-subtle: #F8F9FA;
+  --dd-border: #DEE2E6;
+  --dd-border-soft: #E4E8EC;
+  --dd-text-primary: #2E4765;
+  --dd-text: #212529;
+  --dd-text-secondary: #7E7172;
+  --dd-text-muted: #6C757D;
+  --dd-text-inverse: #FFFFFF;
+  --dd-brand: #2D1967;
+  --dd-accent-purple: #833CDF;
+  --dd-accent-blue: #4567EE;
+  --dd-accent-orange: #FF4409;
+  --dd-danger: #DC3545;
+  --dd-success: #198754;
+  --dd-warning: #FFC107;
+  --dd-focus: #86B7FE;
+  --dd-radius: 5px;
+  --dd-radius-sm: 3px;
+  --dd-radius-lg: 8px;
+  --dd-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  --dd-shadow-md: 0 2px 6px rgba(0,0,0,0.08);
+  --dd-font: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--dd-font);
+  -webkit-font-smoothing: antialiased;
+  background: var(--dd-canvas);
+  color: var(--dd-text);
+}
+
+.dd-layout { display: flex; min-height: 100vh; }
+.dd-sidebar { width: 240px; background: var(--dd-surface); border-right: 1px solid var(--dd-border); padding: 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.dd-sidebar-brand { font-weight: 700; font-size: 1rem; color: var(--dd-brand); margin-bottom: 1rem; padding: 0.5rem; display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+.dd-sidebar a { padding: 0.5rem 0.75rem; border-radius: var(--dd-radius); font-size: 0.875rem; color: var(--dd-text-secondary); text-decoration: none; transition: all 0.15s; }
+.dd-sidebar a:hover, .dd-sidebar a.active { background: #f8f4ff; color: var(--dd-brand); }
+.dd-main { flex: 1; padding: 1.5rem 2rem; }
+.dd-header { background: var(--dd-surface); border-bottom: 1px solid var(--dd-border); padding: 0.75rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+
+.dd-card { background: var(--dd-surface); border: 1px solid var(--dd-border-soft); border-radius: var(--dd-radius-lg); box-shadow: var(--dd-shadow); }
+.dd-card-header { padding: 0.875rem 1.25rem; border-bottom: 1px solid var(--dd-border-soft); font-weight: 600; font-size: 0.875rem; color: var(--dd-text-primary); }
+.dd-card-body { padding: 1.25rem; }
+
+.dd-input { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid var(--dd-border); border-radius: var(--dd-radius); font-size: 0.875rem; color: var(--dd-text); background: var(--dd-surface); outline: none; transition: border-color 0.15s; }
+.dd-input:focus { border-color: var(--dd-brand); box-shadow: 0 0 0 3px rgba(45,25,103,0.1); }
+.dd-label { display: block; font-size: 0.8125rem; font-weight: 600; color: var(--dd-text-secondary); margin-bottom: 0.375rem; }
+
+.dd-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: var(--dd-radius); font-size: 0.875rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; }
+.dd-btn-primary { background: var(--dd-brand); color: var(--dd-text-inverse); }
+.dd-btn-primary:hover { background: #1f0e4d; }
+.dd-btn-secondary { background: var(--dd-surface); color: var(--dd-text); border: 1px solid var(--dd-border); }
+.dd-btn-secondary:hover { background: #f1f5f9; }
+.dd-btn-danger { background: var(--dd-danger); color: #fff; }
+.dd-btn-danger:hover { background: #b02a37; }
+.dd-btn-ghost { background: transparent; color: var(--dd-text-secondary); }
+.dd-btn-ghost:hover { background: #f1f5f9; }
+.dd-btn-sm { padding: 0.25rem 0.625rem; font-size: 0.8125rem; }
+.dd-btn-block { width: 100%; }
+.dd-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.dd-stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.dd-stat-card { padding: 1.25rem; text-decoration: none; display: flex; align-items: center; gap: 1rem; transition: box-shadow 0.15s; }
+.dd-stat-card:hover { box-shadow: var(--dd-shadow-md); }
+.dd-stat-icon { width: 40px; height: 40px; border-radius: var(--dd-radius); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.dd-stat-value { font-size: 1.5rem; font-weight: 700; color: var(--dd-text-primary); }
+.dd-stat-label { font-size: 0.75rem; color: var(--dd-text-muted); }
+
+.dd-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.dd-table th { text-align: left; padding: 0.625rem 1rem; border-bottom: 2px solid var(--dd-border); color: var(--dd-text-secondary); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
+.dd-table td { padding: 0.625rem 1rem; border-bottom: 1px solid var(--dd-border-soft); }
+.dd-table tr:hover td { background: var(--dd-surface-subtle); }
+
+.dd-badge { display: inline-flex; padding: 0.125rem 0.5rem; border-radius: var(--dd-radius-pill); font-size: 0.75rem; font-weight: 600; }
+.dd-badge-success { background: #d1e7dd; color: var(--dd-success); }
+.dd-badge-warning { background: #fff3cd; color: #664d03; }
+.dd-badge-danger { background: #f8d7da; color: var(--dd-danger); }
+.dd-badge-info { background: #cff4fc; color: #055160; }
+
+.dd-alert { padding: 0.75rem 1rem; border-radius: var(--dd-radius); font-size: 0.875rem; margin-bottom: 1rem; }
+.dd-alert-error { background: #f8d7da; color: var(--dd-danger); border: 1px solid #f5c2c7; }
+.dd-alert-success { background: #d1e7dd; color: var(--dd-success); border: 1px solid #badbcc; }
+
+.dd-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 999; }
+.dd-modal { background: var(--dd-surface); border-radius: var(--dd-radius-lg); box-shadow: var(--dd-shadow-md); padding: 1.5rem; max-width: 520px; width: 90%; max-height: 90vh; overflow-y: auto; }
+
+.dd-skeleton { background: linear-gradient(90deg, #e9ecef 25%, #dee2e6 50%, #e9ecef 75%); background-size: 200% 100%; animation: dd-shimmer 1.5s infinite; border-radius: var(--dd-radius-sm); }
+@keyframes dd-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }

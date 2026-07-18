@@ -3,6 +3,7 @@ package gateway
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -11,7 +12,9 @@ import (
 
 	"github.com/identity-platform/internal/ent"
 	"github.com/identity-platform/internal/ent/auditlog"
+	entrole "github.com/identity-platform/internal/ent/role"
 	"github.com/identity-platform/internal/ent/user"
+	"github.com/identity-platform/internal/ent/userrole"
 	cryptopkg "github.com/identity-platform/internal/pkg/crypto"
 )
 
@@ -753,4 +756,220 @@ func (h *Handler) AdminServiceHealth(c *gin.Context) {
 		},
 		"uptime": time.Now().Unix(),
 	})
+}
+
+// =========================== Admin: User Role Management ===========================
+
+func (h *Handler) AdminGetUserRoles(c *gin.Context) {
+	uid, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	urs, err := h.authClient.UserRole.Query().
+		Where(userrole.UserID(uid)).
+		WithRole().
+		All(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	roles := make([]gin.H, 0, len(urs))
+	for _, ur := range urs {
+		if ur.Edges.Role != nil {
+			roles = append(roles, gin.H{
+				"id":          ur.Edges.Role.ID.String(),
+				"name":        ur.Edges.Role.Name,
+				"description": ur.Edges.Role.Description,
+			})
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"roles": roles})
+}
+
+func (h *Handler) AdminAssignUserRole(c *gin.Context) {
+	uid, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	var req struct {
+		RoleName string `json:"role_name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "role_name is required"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	r, err := h.authClient.Role.Query().Where(entrole.NameEQ(req.RoleName)).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "role not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	exists, _ := h.authClient.UserRole.Query().
+		Where(userrole.UserID(uid), userrole.RoleID(r.ID)).
+		Exist(ctx)
+	if exists {
+		c.JSON(http.StatusOK, gin.H{"message": "role already assigned"})
+		return
+	}
+
+	_, err = h.authClient.UserRole.Create().
+		SetUserID(uid).
+		SetRoleID(r.ID).
+		Save(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	h.recordAuditAdmin(c, uid, "ASSIGN_ROLE", "user", uid.String(), gin.H{"role": req.RoleName})
+	c.JSON(http.StatusOK, gin.H{"message": "role assigned"})
+}
+
+func (h *Handler) AdminRemoveUserRole(c *gin.Context) {
+	uid, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+	rid, err := uuid.Parse(c.Param("roleId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid role id"})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	deleted, err := h.authClient.UserRole.Delete().
+		Where(userrole.UserID(uid), userrole.RoleID(rid)).
+		Exec(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if deleted == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "role assignment not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "role removed"})
+}
+
+func (h *Handler) recordAuditAdmin(c *gin.Context, userID uuid.UUID, action, resourceType, resourceID string, meta gin.H) {
+	event, _ := h.authClient.AuditLog.Create().
+		SetUserID(userID).
+		SetAction(action).
+		SetResourceType(resourceType).
+		SetResourceID(resourceID).
+		SetIPAddress(c.ClientIP()).
+		SetUserAgent(c.Request.UserAgent()).
+		Save(c.Request.Context())
+	_ = event
+}
+
+// =========================== Admin: Developer Management ===========================
+
+func (h *Handler) AdminListDevelopers(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	defer cancel()
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	size, _ := strconv.Atoi(c.DefaultQuery("size", "50"))
+	if page < 1 { page = 1 }
+	if size < 1 { size = 1 }
+	if size > 100 { size = 100 }
+
+	// Find users who have the DEVELOPER or ADMIN or SUPER_ADMIN role (all can create apps)
+	urs, err := h.authClient.UserRole.Query().
+		Where(
+			userrole.HasRoleWith(entrole.NameIn("DEVELOPER", "ADMIN", "SUPER_ADMIN")),
+		).
+		WithUser(func(q *ent.UserQuery) { q.WithProfile() }).
+		WithRole().
+		All(ctx)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	type devItem struct {
+		UserID      string `json:"user_id"`
+		Email       string `json:"email"`
+		Username    string `json:"username,omitempty"`
+		DisplayName string `json:"display_name,omitempty"`
+		Status      string `json:"status"`
+		Roles       []string `json:"roles"`
+		CreatedAt   string `json:"created_at"`
+	}
+
+	// Group by user to avoid duplicates (a user can have multiple roles)
+	devMap := make(map[string]*devItem)
+	for _, ur := range urs {
+		if ur.Edges.User == nil { continue }
+		u := ur.Edges.User
+		item, exists := devMap[u.ID.String()]
+		if !exists {
+			dn := ""
+			if u.Edges.Profile != nil && u.Edges.Profile.DisplayName != "" {
+				dn = u.Edges.Profile.DisplayName
+			}
+			item = &devItem{
+				UserID:      u.ID.String(),
+				Email:       u.Email,
+				Username:    u.Username,
+				DisplayName: dn,
+				Status:      string(u.Status),
+				Roles:       make([]string, 0),
+				CreatedAt:   u.CreatedAt.Format(time.RFC3339),
+			}
+			devMap[u.ID.String()] = item
+		}
+		if ur.Edges.Role != nil && !contains(item.Roles, ur.Edges.Role.Name) {
+			item.Roles = append(item.Roles, ur.Edges.Role.Name)
+		}
+	}
+
+	items := make([]devItem, 0, len(devMap))
+	for _, v := range devMap {
+		items = append(items, *v)
+	}
+
+	// Pagination
+	total := len(items)
+	start := (page - 1) * size
+	end := start + size
+	if start > total { start = total }
+	if end > total { end = total }
+	paged := items[start:end]
+
+	c.JSON(http.StatusOK, gin.H{
+		"developers": paged,
+		"total":      total,
+		"page":       page,
+		"size":       size,
+	})
+}
+
+func contains(slice []string, s string) bool {
+	for _, v := range slice {
+		if v == s { return true }
+	}
+	return false
 }

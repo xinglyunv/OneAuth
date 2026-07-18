@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/identity-platform/internal/ent"
 	"github.com/identity-platform/internal/ent/session"
-	"github.com/identity-platform/internal/ent/user"
 	"github.com/identity-platform/internal/pkg/totp"
 	pbauth "github.com/identity-platform/proto/auth"
 	"go.uber.org/zap"
@@ -82,9 +82,31 @@ func (s *Service) DisableMFA(ctx context.Context, req *pbauth.DisableMFARequest)
 }
 
 func (s *Service) ValidateMFA(ctx context.Context, req *pbauth.ValidateMFARequest) (*pbauth.ValidateMFAResponse, error) {
-	u, err := s.client.User.Query().Where(user.MfaEnabled(true)).First(ctx)
-	if err != nil {
+	var u *ent.User
+	var err error
+
+	if s.redis != nil && req.MfaSessionToken != "" {
+		key := "mfa_session:" + req.MfaSessionToken
+		userIDStr, redisErr := s.redis.Get(ctx, key).Result()
+		if redisErr != nil {
+			return nil, errors.New("invalid or expired MFA session")
+		}
+		s.redis.Del(ctx, key)
+
+		uid, parseErr := uuid.Parse(userIDStr)
+		if parseErr != nil {
+			return nil, errors.New("invalid MFA session data")
+		}
+		u, err = s.client.User.Get(ctx, uid)
+		if err != nil {
+			return nil, errors.New("user not found")
+		}
+	} else {
 		return nil, errors.New("invalid MFA session")
+	}
+
+	if u.MfaSecret == "" {
+		return nil, errors.New("MFA not configured for this user")
 	}
 
 	if !totp.ValidateCode(u.MfaSecret, req.TotpCode) {

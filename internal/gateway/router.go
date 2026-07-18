@@ -4,17 +4,18 @@ import (
 	"github.com/identity-platform/internal/ent"
 	"github.com/identity-platform/internal/middleware"
 	jwtpkg "github.com/identity-platform/internal/pkg/jwt"
+	"github.com/redis/go-redis/v9"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
-func NewRouter(handler *Handler, jwt *jwtpkg.TokenManager, logger *zap.Logger, db *ent.Client) *gin.Engine {
+func NewRouter(handler *Handler, jwt *jwtpkg.TokenManager, logger *zap.Logger, db *ent.Client, rdb redis.UniversalClient) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.New()
 	r.Use(middleware.Logger(logger))
 	r.Use(middleware.CORS())
-	r.Use(middleware.RateLimiter())
+	r.Use(middleware.RateLimiter(rdb))
 	r.Use(gin.Recovery())
 
 	r.GET("/health", handler.HealthCheck)
@@ -132,11 +133,15 @@ func NewRouter(handler *Handler, jwt *jwtpkg.TokenManager, logger *zap.Logger, d
 
 		// Users
 		admin.GET("/users", handler.AdminListUsers)
+		admin.GET("/users/developers", handler.AdminListDevelopers)
 		admin.GET("/users/:id", handler.AdminGetUser)
 		admin.POST("/users/:id/toggle-status", handler.AdminToggleUserStatus)
 		admin.DELETE("/users/:id", handler.AdminDeleteUser)
 		admin.POST("/users/:id/force-logout", handler.AdminForceLogout)
 		admin.POST("/users/:id/reset-password", handler.AdminResetUserPassword)
+		admin.GET("/users/:id/roles", handler.AdminGetUserRoles)
+		admin.POST("/users/:id/roles", handler.AdminAssignUserRole)
+		admin.DELETE("/users/:id/roles/:roleId", handler.AdminRemoveUserRole)
 
 		// OAuth Apps
 		admin.GET("/apps", handler.AdminListApps)

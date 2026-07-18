@@ -8,6 +8,7 @@ import (
 	"github.com/identity-platform/internal/ent"
 	"github.com/identity-platform/internal/ent/userrole"
 	jwtpkg "github.com/identity-platform/internal/pkg/jwt"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
@@ -49,8 +50,39 @@ func CORS() gin.HandlerFunc {
 	}
 }
 
-func RateLimiter() gin.HandlerFunc {
+func RateLimiter(rdb redis.UniversalClient) gin.HandlerFunc {
+	const limit = 100
+	const window = 60 * time.Second
+
 	return func(c *gin.Context) {
+		if rdb == nil {
+			c.Next()
+			return
+		}
+
+		ip := c.ClientIP()
+		key := "ratelimit:" + ip
+
+		ctx := c.Request.Context()
+		count, err := rdb.Incr(ctx, key).Result()
+		if err != nil {
+			c.Next()
+			return
+		}
+
+		if count == 1 {
+			rdb.Expire(ctx, key, window)
+		}
+
+		if count > limit {
+			c.JSON(http.StatusTooManyRequests, gin.H{
+				"error":       "rate limit exceeded",
+				"retry_after": window.Seconds(),
+			})
+			c.Abort()
+			return
+		}
+
 		c.Next()
 	}
 }

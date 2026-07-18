@@ -57,7 +57,7 @@ func main() {
 	jwtManager := initJWT(cfg, logger)
 
 	grpcSrv := gateway.NewGRPCServer(cfg.Server.GRPCPort, logger)
-	authSvc := gateway.RegisterAuthServiceDirect(grpcSrv, db, jwtManager, logger)
+	authSvc := gateway.RegisterAuthServiceDirect(grpcSrv, db, jwtManager, logger, rdb)
 	oauth2Svc := gateway.RegisterOAuth2ServiceDirect(grpcSrv, db, jwtManager, logger)
 
 	go func() {
@@ -68,7 +68,7 @@ func main() {
 
 	handler := gateway.NewOAuth2Handler(authSvc, oauth2Svc, jwtManager, db, cfg.Admin)
 
-	router := gateway.NewRouter(handler, jwtManager, logger, db)
+	router := gateway.NewRouter(handler, jwtManager, logger, db, rdb)
 
 	httpSrv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.Server.HTTPPort),

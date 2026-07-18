@@ -10,6 +10,7 @@ import (
 	"github.com/identity-platform/internal/ent/auditlog"
 	"github.com/identity-platform/internal/ent/oauthclient"
 	"github.com/identity-platform/internal/ent/user"
+	"github.com/identity-platform/internal/ent/userrole"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -128,6 +129,20 @@ func (h *Handler) AdminGetUser(c *gin.Context) {
 
 	sessionCount := len(u.Edges.Sessions)
 
+	urs, _ := h.authClient.UserRole.Query().
+		Where(userrole.UserID(uid)).
+		WithRole().
+		All(ctx)
+	roles := make([]gin.H, 0)
+	for _, ur := range urs {
+		if ur.Edges.Role != nil {
+			roles = append(roles, gin.H{
+				"id":   ur.Edges.Role.ID.String(),
+				"name": ur.Edges.Role.Name,
+			})
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"user": gin.H{
 			"id":             u.ID.String(),
@@ -138,6 +153,7 @@ func (h *Handler) AdminGetUser(c *gin.Context) {
 			"status":         string(u.Status),
 			"profile":        profile,
 			"session_count":  sessionCount,
+			"roles":          roles,
 			"created_at":     u.CreatedAt.Format(time.RFC3339),
 		},
 	})

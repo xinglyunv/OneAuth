@@ -11,6 +11,7 @@ import (
 	jwtpkg "github.com/identity-platform/internal/pkg/jwt"
 	pbauth "github.com/identity-platform/proto/auth"
 	pboauth2 "github.com/identity-platform/proto/oauth2"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -40,13 +41,13 @@ func NewGRPCServer(port int, logger *zap.Logger) *GRPCServer {
 	}
 }
 
-func (s *GRPCServer) RegisterAuthService(client *ent.Client, jwt *jwtpkg.TokenManager) {
-	authSvc := auth.NewService(client, jwt, s.logger)
+func (s *GRPCServer) RegisterAuthService(client *ent.Client, jwt *jwtpkg.TokenManager, rdb redis.UniversalClient) {
+	authSvc := auth.NewService(client, jwt, s.logger, rdb)
 	pbauth.RegisterAuthServiceServer(s.server, authSvc)
 }
 
-func RegisterAuthServiceDirect(s *GRPCServer, client *ent.Client, jwt *jwtpkg.TokenManager, logger *zap.Logger) *auth.Service {
-	authSvc := auth.NewService(client, jwt, logger)
+func RegisterAuthServiceDirect(s *GRPCServer, client *ent.Client, jwt *jwtpkg.TokenManager, logger *zap.Logger, rdb redis.UniversalClient) *auth.Service {
+	authSvc := auth.NewService(client, jwt, logger, rdb)
 	pbauth.RegisterAuthServiceServer(s.server, authSvc)
 	return authSvc
 }

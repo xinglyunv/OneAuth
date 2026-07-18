@@ -20,6 +20,7 @@ import (
 	"github.com/identity-platform/internal/pkg/crypto"
 	jwtpkg "github.com/identity-platform/internal/pkg/jwt"
 	pbauth "github.com/identity-platform/proto/auth"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -29,13 +30,15 @@ type Service struct {
 	jwt         *jwtpkg.TokenManager
 	logger      *zap.Logger
 	emailSender EmailSender
+	redis       redis.UniversalClient
 }
 
-func NewService(client *ent.Client, jwt *jwtpkg.TokenManager, logger *zap.Logger) *Service {
+func NewService(client *ent.Client, jwt *jwtpkg.TokenManager, logger *zap.Logger, rdb redis.UniversalClient) *Service {
 	return &Service{
 		client: client,
 		jwt:    jwt,
 		logger: logger,
+		redis:  rdb,
 	}
 }
 
@@ -142,6 +145,13 @@ func (s *Service) Login(ctx context.Context, req *pbauth.LoginRequest) (*pbauth.
 		mfaSessionToken, err := generateRandomToken()
 		if err != nil {
 			return nil, fmt.Errorf("generate mfa token: %w", err)
+		}
+
+		if s.redis != nil {
+			key := "mfa_session:" + mfaSessionToken
+			if err := s.redis.Set(ctx, key, u.ID.String(), 5*time.Minute).Err(); err != nil {
+				s.logger.Warn("failed to store mfa session in redis", zap.Error(err))
+			}
 		}
 
 		s.recordLoginAttempt(ctx, req.Email, u.ID, req.IpAddress, true, "")
